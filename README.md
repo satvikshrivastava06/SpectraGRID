@@ -1,0 +1,2 @@
+# SpectraGRID
+Autonomous Revenue Intelligence
