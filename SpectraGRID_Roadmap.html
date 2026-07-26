@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helio-Twin → SpectraGRID · Implementation Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d10;
+    --panel:#11151a;
+    --panel-alt:#161c22;
+    --border:#232a32;
+    --text:#e7edf2;
+    --dim:#8b98a5;
+    --dim2:#5f6b76;
+    --cyan:#3ee6ff;
+    --amber:#ffb020;
+    --red:#ff4d5e;
+    --gold:#f2a93b;
+    --violet:#9b7bff;
+    --emerald:#17c98d;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,sans-serif; font-size:15.5px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif; font-weight:600; letter-spacing:-0.01em; color:#fff;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:var(--cyan); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  code{font-family:'JetBrains Mono',monospace; background:var(--panel-alt); padding:1px 6px; border-radius:4px; font-size:0.88em; color:var(--cyan); border:1px solid var(--border);}
+
+  /* Layout */
+  .shell{display:flex; max-width:1400px; margin:0 auto;}
+  nav.toc{
+    width:268px; flex-shrink:0; position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:28px 18px 40px 28px; border-right:1px solid var(--border);
+  }
+  nav.toc .brand{font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:700; color:var(--cyan); letter-spacing:0.04em; margin-bottom:2px;}
+  nav.toc .brand-sub{font-size:11px; color:var(--dim2); margin-bottom:22px;}
+  nav.toc ol{list-style:none; margin:0; padding:0; counter-reset:sec;}
+  nav.toc li{counter-increment:sec; margin-bottom:2px;}
+  nav.toc a{
+    display:block; font-size:12.5px; color:var(--dim); padding:6px 10px 6px 0;
+    border-left:2px solid transparent; padding-left:10px; transition:all .15s;
+  }
+  nav.toc a::before{content:counter(sec, decimal-leading-zero) "  "; color:var(--dim2); font-family:'JetBrains Mono',monospace; font-size:11px;}
+  nav.toc a:hover{color:var(--cyan); text-decoration:none; border-left-color:var(--cyan);}
+  main{flex:1; min-width:0; padding:44px 56px 100px 56px;}
+
+  /* Hero */
+  .hero{padding-bottom:36px; margin-bottom:40px; border-bottom:1px solid var(--border);}
+  .hero .eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--dim2); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:14px;}
+  .hero h1{font-size:38px; line-height:1.15; margin:0 0 12px 0;}
+  .hero h1 span{color:var(--cyan);}
+  .hero p.lede{font-size:16px; color:var(--dim); max-width:760px; margin:0 0 28px 0;}
+
+  .ggi-strip{display:flex; gap:0; border:1px solid var(--border); border-radius:10px; overflow:hidden; max-width:760px;}
+  .ggi-cell{flex:1; padding:16px 20px; background:var(--panel);}
+  .ggi-cell + .ggi-cell{border-left:1px solid var(--border);}
+  .ggi-cell .val{font-family:'JetBrains Mono',monospace; font-size:21px; font-weight:600;}
+  .ggi-cell .lbl{font-size:11px; color:var(--dim2); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;}
+  .ggi-cell.expected .val{color:var(--gold);}
+  .ggi-cell.actual .val{color:var(--cyan);}
+  .ggi-cell.ghost .val{color:var(--red);}
+
+  /* Sections */
+  section{margin-bottom:56px; scroll-margin-top:24px;}
+  section h2{font-size:24px; display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+  section h2 .num{font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--dim2); font-weight:400;}
+  section .subhead{color:var(--dim); font-size:14px; margin:0 0 22px 0; max-width:780px;}
+  section h3{font-size:16.5px; margin:28px 0 10px 0; color:var(--text);}
+  section h4{font-size:14px; margin:18px 0 8px 0; color:var(--dim);}
+  p{margin:0 0 14px 0; max-width:820px;}
+  ul,ol{margin:0 0 16px 0; padding-left:20px; max-width:800px;}
+  li{margin-bottom:6px;}
+
+  .callout{
+    border:1px solid var(--border); background:var(--panel); border-radius:10px;
+    padding:16px 20px; margin:18px 0; max-width:800px;
+  }
+  .callout.violet{border-left:3px solid var(--violet);}
+  .callout.emerald{border-left:3px solid var(--emerald);}
+  .callout.amber{border-left:3px solid var(--amber);}
+  .callout .tag{font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--dim2); margin-bottom:6px;}
+  .callout p{margin:0; font-size:14px;}
+
+  /* Tables */
+  .tbl-wrap{overflow-x:auto; margin:14px 0 22px 0; border:1px solid var(--border); border-radius:10px;}
+  table{border-collapse:collapse; width:100%; font-size:13px;}
+  th{
+    background:var(--panel-alt); text-align:left; padding:10px 14px; font-family:'JetBrains Mono',monospace;
+    font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--dim); border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  td{padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:top; color:var(--text);}
+  tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--panel);}
+  td.mono, th.mono{font-family:'JetBrains Mono',monospace; font-size:12.5px;}
+
+  .badge{display:inline-block; padding:2px 8px; border-radius:5px; font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:500; white-space:nowrap;}
+  .b-cyan{background:rgba(62,230,255,.12); color:var(--cyan); border:1px solid rgba(62,230,255,.3);}
+  .b-emerald{background:rgba(23,201,141,.12); color:var(--emerald); border:1px solid rgba(23,201,141,.3);}
+  .b-amber{background:rgba(255,176,32,.12); color:var(--amber); border:1px solid rgba(255,176,32,.3);}
+  .b-red{background:rgba(255,77,94,.12); color:var(--red); border:1px solid rgba(255,77,94,.3);}
+  .b-violet{background:rgba(155,123,255,.12); color:var(--violet); border:1px solid rgba(155,123,255,.3);}
+
+  /* Phase cards */
+  .phase-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:20px 0 28px 0;}
+  .phase-card{border:1px solid var(--border); border-radius:10px; padding:18px 20px; background:var(--panel);}
+  .phase-card .ph-num{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--dim2); text-transform:uppercase; letter-spacing:0.06em;}
+  .phase-card h4{margin:6px 0 4px 0; color:#fff; font-size:15px;}
+  .phase-card .ph-time{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--cyan); margin-bottom:10px;}
+  .phase-card p{font-size:13px; color:var(--dim); margin:0;}
+
+  /* Repo tree */
+  pre.tree{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px 22px;
+    font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; overflow-x:auto; color:var(--text);
+    max-width:800px;
+  }
+  pre.tree .c{color:var(--dim2);}
+  pre.tree .d{color:var(--cyan);}
+  pre.tree .m{color:var(--gold);}
+
+  /* Event flow */
+  .flow{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:16px 0 22px 0; max-width:820px;}
+  .flow .ev{
+    font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--panel-alt);
+    border:1px solid var(--border); padding:6px 12px; border-radius:6px; color:var(--text);
+  }
+  .flow .arrow{color:var(--dim2); font-size:14px;}
+
+  /* Milestone timeline */
+  .mtl{border-left:2px solid var(--border); margin:20px 0 20px 8px; padding-left:24px; max-width:800px;}
+  .mtl .m-item{position:relative; padding-bottom:26px;}
+  .mtl .m-item:last-child{padding-bottom:0;}
+  .mtl .m-item::before{
+    content:''; position:absolute; left:-30px; top:3px; width:11px; height:11px; border-radius:50%;
+    background:var(--bg); border:2px solid var(--cyan);
+  }
+  .mtl .m-item.done::before{background:var(--emerald); border-color:var(--emerald);}
+  .mtl .m-title{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; color:#fff;}
+  .mtl .m-time{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--dim2); margin-left:8px;}
+  .mtl .m-desc{font-size:13.5px; color:var(--dim); margin-top:4px;}
+  .mtl .m-gate{font-size:12px; color:var(--amber); margin-top:4px; font-family:'JetBrains Mono',monospace;}
+
+  footer{border-top:1px solid var(--border); padding:28px 56px; color:var(--dim2); font-size:12px; max-width:1400px; margin:0 auto;}
+
+  @media (max-width: 980px){
+    .shell{flex-direction:column;}
+    nav.toc{position:relative; width:100%; height:auto; border-right:none; border-bottom:1px solid var(--border); padding:20px 24px;}
+    main{padding:32px 22px 80px 22px;}
+    .phase-grid{grid-template-columns:1fr;}
+    .hero h1{font-size:28px;}
+    .ggi-strip{flex-direction:column;}
+    .ggi-cell + .ggi-cell{border-left:none; border-top:1px solid var(--border);}
+  }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="toc">
+  <div class="brand">HELIO-TWIN → SPECTRAGRID</div>
+  <div class="brand-sub">Implementation Roadmap · Jul 2026</div>
+  <ol>
+    <li><a href="#exec">Executive Summary</a></li>
+    <li><a href="#arch">Architecture Overview</a></li>
+    <li><a href="#phases">Development Phases</a></li>
+    <li><a href="#milestones">Milestones</a></li>
+    <li><a href="#sprints">Sprint Breakdown</a></li>
+    <li><a href="#repo">Repository Structure</a></li>
+    <li><a href="#tech">Technology Decisions</a></li>
+    <li><a href="#security">Security Architecture</a></li>
+    <li><a href="#devops">DevOps Architecture</a></li>
+    <li><a href="#mlops">MLOps Architecture</a></li>
+    <li><a href="#frontend">Frontend &amp; Digital Twin</a></li>
+    <li><a href="#scaling">Scaling Strategy</a></li>
+    <li><a href="#cost">Cost Optimization</a></li>
+    <li><a href="#migration">Enterprise Migration</a></li>
+    <li><a href="#risks">Risks &amp; Mitigations</a></li>
+    <li><a href="#assessment">Final Assessment</a></li>
+  </ol>
+</nav>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">Autonomous Renewable Asset Intelligence · Prototype-to-Enterprise Roadmap</div>
+    <h1>From a coursework prototype to a<br><span>fundable, deployable</span> platform.</h1>
+    <p class="lede">This roadmap takes Helio-Twin — validated across four assignments on your 150&nbsp;kWp Jabalpur campus — and builds it into the production-grade prototype described in your SpectraGRID blueprint: hexagonal architecture, event-driven backend, explainable AI, and the cinematic Command Center frontend, without discarding anything you've already proven.</p>
+    <div class="ggi-strip">
+      <div class="ggi-cell expected"><div class="val">~32,000 kWh/yr</div><div class="lbl">Ghost generation today (baseline)</div></div>
+      <div class="ggi-cell actual"><div class="val">₹2.5L / 21t CO₂e</div><div class="lbl">Annual value left on the table</div></div>
+      <div class="ggi-cell ghost"><div class="val">&lt; 2%</div><div class="lbl">Target loss once GGI is live</div></div>
+    </div>
+  </div>
+
+  <!-- 1 EXECUTIVE SUMMARY -->
+  <section id="exec">
+    <h2><span class="num">01</span> Executive Summary</h2>
+    <p class="subhead">What you've already built, what this roadmap adds, and the one naming decision to make before you write more code.</p>
+
+    <h3>What's already validated</h3>
+    <p>You don't need to prove the concept anymore — three assignments already did that work, and the fourth quantified its impact. That's an unusually strong starting position for a "prototype roadmap," and this document treats it as one:</p>
+    <ul>
+      <li><strong>The AI use case is defined and defensible</strong> — a hybrid architecture (Isolation Forest for unsupervised anomaly detection, TinyML on ESP32 for offline resilience, RAG over Llama&nbsp;3/Groq for grounded conversational alerts) with real input/output contracts already sketched in JSON.</li>
+      <li><strong>The ESG case is quantified, not asserted</strong> — GHG Protocol Scope&nbsp;2 methodology, a 0.71 kgCO₂e/kWh grid factor, and a baseline-to-target table (32,000&nbsp;kWh recovered, 21.3t CO₂e avoided, MTTD from 14–21 days to &lt;1 minute) that would survive a grant reviewer's questions.</li>
+      <li><strong>The adoption strategy is stakeholder-mapped</strong> — four named roles (Maintenance, Facility Manager, Finance, ESG Office) each with an engagement method and a success KPI, plus a phased budget (₹5,000 → ₹30,000 → SaaS tier) and a risk matrix.</li>
+      <li><strong>The scaling thesis is coherent</strong> — "Helio-Twin in a box," train-the-trainer for EPC contractors, federated learning for data sovereignty, and SaaS pricing offset by energy savings.</li>
+    </ul>
+
+    <h3>What this roadmap adds</h3>
+    <p>The blueprint and the SpectraGRID spec both point at the same gap: a mature <em>concept</em> needs a mature <em>engineering substrate</em> underneath it before it can be pitched to enterprise CTOs or accelerators. Concretely, this roadmap:</p>
+    <ul>
+      <li>Replaces the naive "expected output" baseline with a real <strong>pvlib physics model</strong> — the single credibility upgrade your own ESG review flagged as highest-priority.</li>
+      <li>Turns "power low" alerts into <strong>explainable root-cause attribution</strong> (SHAP-style % breakdown across soiling, inverter trips, grid instability, shading, sensor drift).</li>
+      <li>Migrates from a synchronous Firebase pipeline to an <strong>event-driven, hexagonal-architecture backend</strong> (Postgres + TimescaleDB, Redis Streams → Kafka) so business logic never has to be rewritten as you scale.</li>
+      <li>Adds the missing enterprise primitives your own blueprint scorecard called out: SRE objectives, disaster recovery, FinOps, MLOps, GitOps, OpenTelemetry.</li>
+      <li>Builds the cinematic <strong>Command Center frontend</strong> you designed — scoped correctly, as an investor/facility-manager-facing layer that sits <em>alongside</em> the WhatsApp-first interface, not instead of it (more on this tension in §11).</li>
+    </ul>
+
+    <div class="callout amber">
+      <div class="tag">One decision to make now</div>
+      <p><strong>Pick one name and use it everywhere.</strong> "Helio-Twin" is your campus-facing, academic brand — it's on four submitted assignments and has institutional trust. "SpectraGRID" is the more ambitious, investor-facing platform name from the blueprint. Splitting the identity across documents reads as unfinished. Recommendation: keep <strong>Helio-Twin</strong> as the product name and reserve "SpectraGRID"-style language for the parent-company/platform framing if you incorporate later — but this is your call, not an engineering one.</p>
+    </div>
+  </section>
+
+  <!-- 2 ARCHITECTURE OVERVIEW -->
+  <section id="arch">
+    <h2><span class="num">02</span> Architecture Overview</h2>
+    <p class="subhead">Clean/hexagonal architecture wrapped around a physics-informed AI pipeline, driven by events, modeled as a graph.</p>
+
+    <h3>Layered system (physical asset → decision → action)</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Layer</th><th>Responsibility</th><th>Key components</th></tr>
+        <tr><td class="mono">Physical</td><td>The real campus asset hierarchy</td><td>308 panels · strings · 2× 50kW inverters · weather station · ESP32 sensor nodes</td></tr>
+        <tr><td class="mono">Telemetry</td><td>Get signal off the roof reliably, even offline</td><td>RS485/Modbus reads → ESP32 edge cache → MQTT (Mosquitto) publish</td></tr>
+        <tr><td class="mono">Physics Engine</td><td>Compute what <em>should</em> have happened</td><td>pvlib: irradiance, temperature derating, panel age/efficiency curves, tilt/azimuth, seasonality</td></tr>
+        <tr><td class="mono">AI Layer</td><td>Explain the gap between expected and actual</td><td>Isolation Forest (anomaly) · XGBoost + SHAP (root cause) · TFT (forecasting) · Survival models (RUL)</td></tr>
+        <tr><td class="mono">Decision Intelligence</td><td>Turn a diagnosis into a recommendation with a number attached</td><td>Dynamic ROI Gate · maintenance/cleaning ROI · battery dispatch · confidence scoring</td></tr>
+        <tr><td class="mono">Action</td><td>Reach the human who can actually act</td><td>WhatsApp (RAG LLM) · Ops dashboard · ticket creation · CMMS integration (enterprise)</td></tr>
+      </table>
+    </div>
+
+    <h3>Clean / hexagonal architecture</h3>
+    <p>The domain core — the Ghost Generation calculation, the Asset Graph, root-cause attribution logic — must not know whether telemetry arrives from Firebase or Postgres, or whether alerts go out over Twilio or WhatsApp Cloud API directly. Every external dependency sits behind a <strong>port</strong> (an interface defined by the domain) with a swappable <strong>adapter</strong>. This is what lets you migrate Firebase → Postgres in Phase&nbsp;2 (§5, Sprint&nbsp;6) without touching a single line of the GGI calculation. Concretely: a <code>TelemetryRepository</code> port, a <code>NotificationSender</code> port, a <code>WeatherProvider</code> port, and a <code>ModelPredictor</code> port — each with a today-adapter and a tomorrow-adapter listed in §7.</p>
+
+    <h3>The Asset Graph (digital twin backbone)</h3>
+    <p>Your blueprint correctly identifies this as the single highest-leverage addition. Everything else — root cause attribution, blast-radius analysis, simulation, cascading-failure detection — depends on modeling the campus as a graph, not a flat list:</p>
+    <div class="flow">
+      <span class="ev">Tenant</span><span class="arrow">→</span><span class="ev">Campus</span><span class="arrow">→</span><span class="ev">Building</span><span class="arrow">→</span><span class="ev">Rooftop</span><span class="arrow">→</span><span class="ev">Array</span><span class="arrow">→</span><span class="ev">String</span><span class="arrow">→</span><span class="ev">Panel</span><span class="arrow">→</span><span class="ev">Inverter</span><span class="arrow">→</span><span class="ev">Battery</span><span class="arrow">→</span><span class="ev">Grid Connection</span>
+    </div>
+    <p>In Phase&nbsp;2 this is a set of Postgres tables with recursive CTEs for traversal. It only needs to become a dedicated graph store (or a GNN input) in Phase&nbsp;3, once you're modeling cascading failures across multiple buildings.</p>
+
+    <h3>Event-driven backbone</h3>
+    <p>Everything becomes an event, not a function call — this is what lets the system scale to multiple campuses without rewriting business logic:</p>
+    <div class="flow">
+      <span class="ev">TelemetryReceived</span><span class="arrow">→</span><span class="ev">ValidationCompleted</span><span class="arrow">→</span><span class="ev">ExpectedEnergyCalculated</span><span class="arrow">→</span><span class="ev">GhostGenerationDetected</span><span class="arrow">→</span><span class="ev">LossAttributed</span><span class="arrow">→</span><span class="ev">TicketCreated</span><span class="arrow">→</span><span class="ev">NotificationSent</span><span class="arrow">→</span><span class="ev">ResolutionConfirmed</span><span class="arrow">→</span><span class="ev">ModelRetrained</span>
+    </div>
+    <p>Prototype: Redis Streams (Upstash free tier). Growth: NATS JetStream. Enterprise: Kafka — see §14 for exact migration triggers.</p>
+  </section>
+
+  <!-- 3 DEVELOPMENT PHASES -->
+  <section id="phases">
+    <h2><span class="num">03</span> Development Phases</h2>
+    <p class="subhead">Four phases, roughly nine months, each ending with a real gate — matching the budget gates already in your Scaling Strategy deck.</p>
+
+    <div class="phase-grid">
+      <div class="phase-card">
+        <div class="ph-num">Phase 0 — Complete</div>
+        <h4>Foundation</h4>
+        <div class="ph-time">Already done</div>
+        <p>AI workflow designed, ESG metrics quantified, smart solution scoped, scaling strategy stakeholder-mapped. No engineering debt to carry forward — these are design artifacts, not code to maintain.</p>
+      </div>
+      <div class="phase-card">
+        <div class="ph-num">Phase 1</div>
+        <h4>Zero-Cost Working Prototype</h4>
+        <div class="ph-time">Months 1–2 · Sprints 1–4</div>
+        <p>Harden the existing Isolation Forest + Streamlit + Firebase pipeline: physics-based GGI, root-cause v1, ROI-aware WhatsApp alerts. Runs on real or simulated telemetry, ₹0–₹1,000 total.</p>
+      </div>
+      <div class="phase-card">
+        <div class="ph-num">Phase 2</div>
+        <h4>Campus Pilot / MVP</h4>
+        <div class="ph-time">Months 3–6 · Sprints 5–12</div>
+        <p>One real inverter + gateway. Event-driven backend, Postgres/TimescaleDB, Asset Graph, RBAC, MLOps shadow mode, production dashboard. ₹3,000–₹5,000 hardware.</p>
+      </div>
+      <div class="phase-card">
+        <div class="ph-num">Phase 3</div>
+        <h4>Regional / Enterprise-Ready</h4>
+        <div class="ph-time">Months 7–9+ · Sprints 13–18</div>
+        <p>Multi-tenant, observability, CI/CD, federated learning pilot, Command Center frontend, disaster recovery. Ready to package as an open-source DPG or pitch to accelerators.</p>
+      </div>
+    </div>
+
+    <div class="callout violet">
+      <div class="tag">Design principle carried through every phase</div>
+      <p>Zero always-on infrastructure, scale-to-zero by default, single engineer can deploy the whole stack. Every technology choice in §7 is picked to satisfy this until a real paying pilot forces an upgrade — not before.</p>
+    </div>
+  </section>
+
+  <!-- 4 MILESTONES -->
+  <section id="milestones">
+    <h2><span class="num">04</span> Milestones</h2>
+    <p class="subhead">Gates borrowed directly from your own Scaling Strategy deck, with the Month 3/6/12 KPI targets you already committed to.</p>
+
+    <div class="mtl">
+      <div class="m-item done">
+        <div class="m-title">M0 · Concept validated<span class="m-time">Complete</span></div>
+        <div class="m-desc">AI workflow, ESG evaluation, smart solution, and scaling strategy submitted and internally scored 9.0–9.8/10.</div>
+      </div>
+      <div class="m-item">
+        <div class="m-title">M1 · Zero-cost prototype live<span class="m-time">End of Month 2</span></div>
+        <div class="m-desc">Physics-based GGI running on real or simulated telemetry. ROI-aware WhatsApp alerts with HITL feedback loop.</div>
+        <div class="m-gate">Gate: Steering Committee approval · Budget ₹5,000</div>
+      </div>
+      <div class="m-item">
+        <div class="m-title">M2 · First real inverter wired in<span class="m-time">End of Month 4</span></div>
+        <div class="m-desc">One building, one inverter, one gateway on the event-driven Postgres/TimescaleDB backend with a working Asset Graph.</div>
+        <div class="m-gate">Gate: Facility Director approval · Pilot validated</div>
+      </div>
+      <div class="m-item">
+        <div class="m-title">M3 · Campus pilot at Month-6 targets<span class="m-time">End of Month 6</span></div>
+        <div class="m-desc">90% user adoption, ≤1 min MTTD, ≤5% false positives, ≥12% energy recovery, ≥15% maintenance OpEx reduction.</div>
+        <div class="m-gate">Gate: University Leadership review</div>
+      </div>
+      <div class="m-item">
+        <div class="m-title">M4 · Replicable regional package<span class="m-time">End of Month 8</span></div>
+        <div class="m-desc">Multi-tenant scaffold, CI/CD, observability, and "Helio-Twin in a box" deployment kit ready for a second campus.</div>
+        <div class="m-gate">Gate: Cloud provisioning approved</div>
+      </div>
+      <div class="m-item">
+        <div class="m-title">M5 · Month-12 targets + Command Center<span class="m-time">Months 9–12</span></div>
+        <div class="m-desc">95% adoption, ≤30 sec MTTD, &lt;3% false positives, &gt;15% recovery, &gt;20% OpEx reduction. Cinematic frontend live for investor/facility-manager demos. Federated learning pilot running across ≥2 campuses.</div>
+        <div class="m-gate">Ready for: accelerator applications, DPG open-sourcing, enterprise pilots</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 SPRINT BREAKDOWN -->
+  <section id="sprints">
+    <h2><span class="num">05</span> Sprint Breakdown</h2>
+    <p class="subhead">Eighteen two-week sprints. Each ships something demoable — nothing is "infrastructure work" with no visible output.</p>
+
+    <h3>Phase 1 — Zero-Cost Prototype Hardening</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Sprint</th><th>Focus</th><th>Ships</th></tr>
+        <tr><td class="mono">S1</td><td>Physics-based baseline</td><td>Replace naive "expected output" with a pvlib model calibrated to the 308-panel, 150 kWp array. Ship the Performance Ratio (PR) metric.</td></tr>
+        <tr><td class="mono">S2</td><td>Ghost Generation Index service</td><td>GGI = Expected − Actual as a first-class domain object, framework-independent, wired into the existing Firebase telemetry stream.</td></tr>
+        <tr><td class="mono">S3</td><td>Root cause attribution v1</td><td>XGBoost + SHAP classifier trained on simulated fault injections (soiling, inverter trip, grid, shading, sensor drift) — the "SHAP for solar" breakdown.</td></tr>
+        <tr><td class="mono">S4</td><td>Dynamic ROI Gate</td><td>Port the wait-for-rain-vs-clean-now logic into a rules+forecast service (NASA POWER/Open-Meteo). Ship the ROI-aware WhatsApp alert with [Fixed]/[False&nbsp;Alarm] HITL buttons.</td></tr>
+      </table>
+    </div>
+
+    <h3>Phase 2 — Campus Pilot / MVP</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Sprint</th><th>Focus</th><th>Ships</th></tr>
+        <tr><td class="mono">S5</td><td>Repository restructure</td><td>Modular-monolith layout (§6) with ports/adapters, so Firebase can be swapped without touching domain logic.</td></tr>
+        <tr><td class="mono">S6</td><td>Postgres + TimescaleDB migration</td><td>Neon Postgres schema (assets, users, tickets, maintenance history + telemetry/weather/forecast/anomaly hypertables). Dual-write, then cut over.</td></tr>
+        <tr><td class="mono">S7</td><td>Event backbone</td><td>Redis Streams implementing the full TelemetryReceived → ... → ModelRetrained chain. Retire direct synchronous calls.</td></tr>
+        <tr><td class="mono">S8</td><td>Data quality service</td><td>Range checks, rate-of-change checks, physics-constraint checks, quarantine queue — catches "Voltage = 9500V"-class sensor lies.</td></tr>
+        <tr><td class="mono">S9</td><td>Asset Graph v1</td><td>Campus→Building→Rooftop→Array→String→Panel→Inverter→Battery→Grid as queryable Postgres recursive CTEs. Enables blast-radius queries.</td></tr>
+        <tr><td class="mono">S10</td><td>Auth + RBAC</td><td>Supabase Auth with the four stakeholder roles (Maintenance, Facility Manager, Finance, ESG Office). Audit log for every AI alert + HITL response.</td></tr>
+        <tr><td class="mono">S11</td><td>MLOps foundation</td><td>MLflow registry for model versions, weekly drift report, digital shadow mode (log AI recommendation vs. human action without auto-acting).</td></tr>
+        <tr><td class="mono">S12</td><td>Production dashboard</td><td>Next.js ops dashboard (GGI, PR, MTTD, MTTR, availability) behind RBAC — Streamlit retired as internal tool, WhatsApp stays primary for ground staff.</td></tr>
+      </table>
+    </div>
+
+    <h3>Phase 3 — Regional / Enterprise-Ready</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Sprint</th><th>Focus</th><th>Ships</th></tr>
+        <tr><td class="mono">S13</td><td>CI/CD + IaC</td><td>GitHub Actions (lint/test/build/deploy) + Terraform for the Neon/Redis/R2 stack. Staging and prod environments.</td></tr>
+        <tr><td class="mono">S14</td><td>Observability</td><td>OpenTelemetry traces/metrics/logs edge→api→worker, self-hosted Jaeger + Grafana. SLOs defined (§9).</td></tr>
+        <tr><td class="mono">S15</td><td>Multi-tenant scaffolding</td><td>Tenant/Region layer above Campus in the Asset Graph. Grid-carbon-intensity and weather-provider parameterized per region.</td></tr>
+        <tr><td class="mono">S16</td><td>Federated learning pilot</td><td>Local model training per campus, only weight-updates shared to a central hub — the data-sovereignty design already sketched in your AI Workflow deck.</td></tr>
+        <tr><td class="mono">S17</td><td>Command Center frontend</td><td>React Three Fiber / GSAP / Lenis cinematic digital twin: photon-loss animation, Ghost Replay™, zoomable Campus→Panel graph (§11).</td></tr>
+        <tr><td class="mono">S18</td><td>DR + FinOps close-out</td><td>Automated Postgres backups + PITR, restore drill, cost-per-campus dashboard, enterprise migration runbook ready to execute.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6 REPOSITORY STRUCTURE -->
+  <section id="repo">
+    <h2><span class="num">06</span> Repository Structure</h2>
+    <p class="subhead">A modular monolith from day one — domain boundaries drawn now so a future split into services is a deployment change, not a rewrite.</p>
+
+    <pre class="tree"><span class="c">helio-twin/</span>
+├── <span class="d">apps/</span>
+│   ├── <span class="d">web/</span>              <span class="c"># Next.js ops dashboard (Phase 2) + Command Center (Phase 3)</span>
+│   ├── <span class="d">worker/</span>           <span class="c"># event consumers: validation, GGI calc, RCA, notifications</span>
+│   └── <span class="d">api/</span>              <span class="c"># REST/GraphQL gateway, auth, ticketing</span>
+├── <span class="d">modules/</span>              <span class="c"># domain boundaries — each owns its ports + adapters</span>
+│   ├── <span class="m">devices/</span>          <span class="c"># asset registry, ESP32 device management</span>
+│   ├── <span class="m">telemetry/</span>        <span class="c"># ingestion, validation, quarantine queue</span>
+│   ├── <span class="m">weather/</span>          <span class="c"># NASA POWER / Open-Meteo adapters</span>
+│   ├── <span class="m">forecasting/</span>      <span class="c"># TFT irradiance/production forecasts</span>
+│   ├── <span class="m">ghost_generation/</span> <span class="c"># pvlib physics engine + GGI domain logic</span>
+│   ├── <span class="m">maintenance/</span>      <span class="c"># ROI gate, ticket lifecycle, RUL predictions</span>
+│   ├── <span class="m">alerts/</span>           <span class="c"># WhatsApp / RAG LLM delivery</span>
+│   ├── <span class="m">carbon/</span>           <span class="c"># Scope 2 dMRV, ESG report generation</span>
+│   ├── <span class="m">battery/</span>          <span class="c"># SOH, dispatch logic (enterprise phase)</span>
+│   ├── <span class="m">users/</span>            <span class="c"># RBAC, auth adapters</span>
+│   ├── <span class="m">analytics/</span>        <span class="c"># PR, availability, capacity factor rollups</span>
+│   ├── <span class="m">audit/</span>            <span class="c"># HITL feedback log, algorithmic trust metrics</span>
+│   ├── <span class="m">notifications/</span>    <span class="c"># channel-agnostic dispatch</span>
+│   └── <span class="m">digital_twin/</span>     <span class="c"># Asset Graph, simulation, blast-radius queries</span>
+├── <span class="d">infra/</span>                <span class="c"># Terraform, docker-compose, CI/CD workflows</span>
+├── <span class="d">packages/</span>
+│   └── <span class="d">shared-types/</span>     <span class="c"># event contracts, DTOs shared across apps</span>
+└── <span class="d">docs/</span>                 <span class="c"># ADRs, runbooks, onboarding</span></pre>
+
+    <p>Each module exposes a small port interface (e.g. <code>TelemetryRepository</code>, <code>WeatherProvider</code>) and owns its own adapters. <code>ghost_generation</code> and <code>digital_twin</code> contain zero infrastructure imports — this is the boundary that makes the Firebase→Postgres and Redis→Kafka migrations mechanical rather than risky.</p>
+  </section>
+
+  <!-- 7 TECHNOLOGY DECISIONS -->
+  <section id="tech">
+    <h2><span class="num">07</span> Technology Decisions</h2>
+    <p class="subhead">Every choice, why it was picked, its trade-off, and exactly what it becomes at enterprise scale.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Category</th><th>Prototype choice</th><th>Why</th><th>Trade-off</th><th>Enterprise alternative</th><th>Migration</th><th class="mono">Cost/mo</th></tr>
+        <tr><td class="mono">Auth</td><td>Supabase Auth (JWT + RBAC)</td><td>Free tier, Postgres-native, maps directly onto your 4 stakeholder roles</td><td>No SSO, ~50k MAU cap on free tier</td><td>Auth0 / Okta (SAML + SCIM)</td><td><span class="badge b-emerald">Low</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Relational DB</td><td>Neon Postgres</td><td>Serverless, scale-to-zero, dev/staging branching</td><td>Cold starts ~1–2s on free tier</td><td>AWS Aurora PostgreSQL</td><td><span class="badge b-emerald">Low</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Time-series</td><td>TimescaleDB (on same Postgres)</td><td>Native hypertables for RS485 telemetry, continuous aggregates for PR/GGI rollups</td><td>Storage caps on free tier</td><td>Timescale Cloud / AWS Timestream</td><td><span class="badge b-amber">Medium</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Object storage</td><td>Cloudflare R2 / self-hosted MinIO</td><td>Zero egress fees; stores thermal images, ESG PDF exports</td><td>MinIO needs self-ops</td><td>AWS S3</td><td><span class="badge b-emerald">Low</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">MQTT broker</td><td>Eclipse Mosquitto (self-hosted)</td><td>Already validated in your AI Workflow design</td><td>Single node = no HA</td><td>AWS IoT Core / EMQX Cloud</td><td><span class="badge b-emerald">Low</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Event bus</td><td>Redis Streams (Upstash)</td><td>Zero infra, consumer groups for the event chain in §2</td><td>10k commands/day free cap</td><td>NATS → Apache Kafka (MSK)</td><td><span class="badge b-amber">Medium</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Anomaly detection</td><td>scikit-learn Isolation Forest</td><td>Unsupervised — no labeled failure data needed; already trained</td><td>Needs periodic seasonal retrain</td><td>Same model via SageMaker endpoints</td><td><span class="badge b-emerald">Low</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Expected-output model</td><td>pvlib-python</td><td>Industry-standard physics model — your #1 flagged credibility gap</td><td>Needs calibrated site parameters</td><td>Same, + vendor warranty curves</td><td><span class="badge b-emerald">Low</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Forecasting</td><td>Temporal Fusion Transformer</td><td>Multi-horizon forecasts with confidence intervals</td><td>Heavier compute than current regression</td><td>Same model, managed training (Vertex AI)</td><td><span class="badge b-amber">Medium</span></td><td class="mono">₹0 (CPU)</td></tr>
+        <tr><td class="mono">Root cause model</td><td>XGBoost + SHAP</td><td>Explainable % breakdown across failure causes</td><td>Needs a labeled/simulated fault dataset</td><td>Same, retrained via MLOps pipeline</td><td><span class="badge b-emerald">Low</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">RUL prediction</td><td>scikit-survival</td><td>Failure probability + remaining useful life estimates</td><td>Needs maintenance history to train on</td><td>Same, + sensor-fusion features</td><td><span class="badge b-amber">Medium</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Conversational layer</td><td>LangChain + Llama 3 (Groq) + WhatsApp Cloud API</td><td>Free/near-free, low-carbon LPU inference, already validated</td><td>Rate limits at scale on free tier</td><td>Same architecture, paid tiers</td><td><span class="badge b-emerald">Low</span></td><td class="mono">₹0–500</td></tr>
+        <tr><td class="mono">Edge inference</td><td>TensorFlow Lite Micro (ESP32)</td><td>Works through Wi-Fi/monsoon outages — a real reliability need, not a nice-to-have</td><td>Limited on-device model size</td><td>Edge Impulse fleet management</td><td><span class="badge b-emerald">Low</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Frontend</td><td>Streamlit → Next.js → R3F Command Center</td><td>Ships fast, upgrades only when RBAC/investor-facing UI is actually needed</td><td>Streamlit can't carry the cinematic vision</td><td>Same Next.js stack, more infra behind it</td><td><span class="badge b-amber">Medium</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">CI/CD &amp; IaC</td><td>GitHub Actions → Terraform</td><td>Free, matches the GitOps path in your own blueprint</td><td>None significant</td><td>ArgoCD + FluxCD</td><td><span class="badge b-amber">Medium</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Observability</td><td>OpenTelemetry + self-hosted Jaeger/Grafana</td><td>Cheap insurance — most startups skip this and regret it</td><td>Self-hosting adds ops overhead</td><td>Datadog / Dynatrace</td><td><span class="badge b-amber">Medium</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Feature flags</td><td>Flagsmith OSS (self-hosted)</td><td>Needed once you have &gt;1 pilot campus</td><td>Self-hosting</td><td>LaunchDarkly</td><td><span class="badge b-emerald">Low</span></td><td class="mono">₹0</td></tr>
+        <tr><td class="mono">Model registry</td><td>MLflow (self-hosted)</td><td>Versions + rollback for every model in the AI layer</td><td>Self-hosting</td><td>SageMaker / Vertex AI</td><td><span class="badge b-amber">Medium</span></td><td class="mono">₹0</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 8 SECURITY -->
+  <section id="security">
+    <h2><span class="num">08</span> Security Architecture</h2>
+    <p class="subhead">Governance isn't an afterthought here — "Algorithmic Trust" is already one of your defined ESG metrics.</p>
+
+    <h3>Prototype (Phase 1–2)</h3>
+    <ul>
+      <li><strong>Auth:</strong> Supabase Auth issuing JWTs; RBAC enforced at the API gateway, not per-screen.</li>
+      <li><strong>Roles:</strong> Maintenance (ticket resolution only), Facility Manager (dashboard + ROI approvals), Finance (read-only cost/ROI reports), ESG Office (read-only carbon ledger + export).</li>
+      <li><strong>Device identity:</strong> Each ESP32 gateway gets a unique API key scoped to its site; rotate on suspected compromise.</li>
+      <li><strong>WhatsApp webhook validation:</strong> verify the signing secret on every inbound Cloud API webhook before trusting a [Fixed]/[False Alarm] click.</li>
+      <li><strong>Audit log:</strong> every AI alert and every human response (fixed / false alarm) is logged immutably — this <em>is</em> your Algorithmic Trust / false-positive-rate metric, not a separate feature.</li>
+    </ul>
+
+    <h3>Enterprise (Phase 3+)</h3>
+    <ul>
+      <li>SSO via SAML, SCIM for automated user provisioning across partner universities.</li>
+      <li>Hardware attestation for gateway devices at scale (prevents spoofed telemetry).</li>
+      <li>Full audit trail exported to a write-once store for compliance review.</li>
+      <li>Role model extends with Tenant Admin and Regional Operator once multi-campus/multi-region lands (§15).</li>
+    </ul>
+  </section>
+
+  <!-- 9 DEVOPS -->
+  <section id="devops">
+    <h2><span class="num">09</span> DevOps Architecture</h2>
+    <p class="subhead">Prototype-grade pipeline now, GitOps discipline built in from the start so nothing has to be re-learned later.</p>
+
+    <h3>Branching &amp; release</h3>
+    <ul>
+      <li><strong>Trunk-based with short-lived feature branches</strong> — <code>main</code> is always deployable. PR review required before merge (even solo — self-review with a checklist catches real bugs).</li>
+      <li><strong>Conventional commits</strong> so a changelog and semver can be generated automatically later.</li>
+    </ul>
+
+    <h3>Pipeline (Phase 1–2)</h3>
+    <div class="flow">
+      <span class="ev">Lint + typecheck</span><span class="arrow">→</span><span class="ev">Unit tests</span><span class="arrow">→</span><span class="ev">Build</span><span class="arrow">→</span><span class="ev">Deploy to staging</span><span class="arrow">→</span><span class="ev">Smoke test</span><span class="arrow">→</span><span class="ev">Promote to prod</span>
+    </div>
+    <p>Runs on GitHub Actions (free for public/small private repos). Deploy target: a single free-tier VM (Fly.io/Render) running Docker Compose — matches the "avoid always-on infra, scale to zero" constraint until a real pilot needs guaranteed uptime.</p>
+
+    <h3>SRE objectives (defined now, not deferred)</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>SLO</th><th>Target</th></tr>
+        <tr><td>Availability</td><td class="mono">99.9%</td></tr>
+        <tr><td>Alert delivery</td><td class="mono">95% delivered within 30 seconds</td></tr>
+        <tr><td>Prediction latency (p95)</td><td class="mono">&lt; 2 seconds</td></tr>
+        <tr><td>False positive budget</td><td class="mono">&lt; 5%</td></tr>
+      </table>
+    </div>
+
+    <h3>Enterprise path (Phase 3+)</h3>
+    <p>Git → Pull Request → Review → Merge → ArgoCD → Cluster Sync. Docker Compose becomes Kubernetes only once a second real customer needs isolated environments — not before, per the zero-cost-first constraint.</p>
+  </section>
+
+  <!-- 10 MLOPS -->
+  <section id="mlops">
+    <h2><span class="num">10</span> MLOps Architecture</h2>
+    <p class="subhead">The blueprint's sharpest observation: "current design trains models — enterprise systems manage models." Here's the difference in practice.</p>
+
+    <h3>Model inventory</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Model</th><th>Purpose</th><th>Status</th></tr>
+        <tr><td>Isolation Forest</td><td>Unsupervised anomaly detection on the daily solar curve</td><td><span class="badge b-emerald">Built</span></td></tr>
+        <tr><td>Regression (soiling index)</td><td>Predictive soiling accumulation modeling</td><td><span class="badge b-emerald">Built</span></td></tr>
+        <tr><td>XGBoost + SHAP</td><td>Root cause attribution across failure classes</td><td><span class="badge b-cyan">Phase 1</span></td></tr>
+        <tr><td>Temporal Fusion Transformer</td><td>Irradiance/production forecasting with confidence intervals</td><td><span class="badge b-cyan">Phase 2</span></td></tr>
+        <tr><td>Survival analysis (Cox PH)</td><td>Inverter/battery remaining useful life</td><td><span class="badge b-cyan">Phase 2</span></td></tr>
+        <tr><td>YOLO Nano / MobileNetV2</td><td>Visual soiling/bird-waste detection from ESP32-CAM</td><td><span class="badge b-violet">Future upgrade</span></td></tr>
+        <tr><td>Graph Neural Network</td><td>Cascading failure detection across the Asset Graph</td><td><span class="badge b-violet">Enterprise only</span></td></tr>
+      </table>
+    </div>
+
+    <h3>The management layer</h3>
+    <ul>
+      <li><strong>Model registry (MLflow):</strong> every version tagged with metrics and deployment date.</li>
+      <li><strong>Drift monitoring:</strong> weekly check for weather-pattern shifts, seasonal changes, hardware aging — flagged automatically, not discovered by a confused facility manager.</li>
+      <li><strong>Digital shadow mode:</strong> before any model acts autonomously, it runs in shadow — logging what it <em>would</em> have recommended, compared against what the human actually did. This is exactly the mechanism your existing [Fixed]/[False&nbsp;Alarm] WhatsApp buttons already feed; formalizing it into a tracked accuracy/override metric is the whole upgrade.</li>
+      <li><strong>Rollback:</strong> if a new model version's false-positive rate jumps (e.g. +20%), auto-revert to the last known-good version. Cheap insurance against a bad retrain silently degrading trust.</li>
+    </ul>
+  </section>
+
+  <!-- 11 FRONTEND -->
+  <section id="frontend">
+    <h2><span class="num">11</span> Frontend &amp; Digital Twin Experience</h2>
+    <p class="subhead">Two audiences, two interfaces — reconciling your WhatsApp-first adoption strategy with the cinematic Command Center vision.</p>
+
+    <div class="callout amber">
+      <div class="tag">A tension worth naming explicitly</div>
+      <p>Your Scaling Strategy deck deliberately differentiates Helio-Twin from "Dashboard-Heavy" enterprise competitors by being <strong>WhatsApp-first</strong> — precisely because ground staff adoption depends on a near-zero learning curve. The Command Center design brief, by contrast, describes an elaborate 3D mission-control interface. These aren't contradictory — they're for <strong>different users</strong>. Ground staff never need to see the digital twin; they need a WhatsApp message. Facility managers, investors, and accelerator judges are the ones who need to <em>see</em> the system's intelligence to trust it. Build both, but don't let the cinematic layer become the primary operational interface — that would undo the adoption advantage you already designed.</p>
+    </div>
+
+    <h3>Tier 1 — Operational layer (ground staff, live from Phase 1)</h3>
+    <p>WhatsApp Cloud API + RAG LLM remains the primary interface for maintenance staff throughout every phase. No 3D, no dashboard login — a message, two buttons, gamified feedback ("You saved 12 kg of CO₂ today").</p>
+
+    <h3>Tier 2 — Ops dashboard (Facility Manager / Finance / ESG Office, Phase 2)</h3>
+    <p>Next.js + Tailwind, RBAC-gated. KPI cards for GGI, PR, MTTD/MTTR, availability, cost/ROI. Not cinematic — fast, dense, glanceable, the tool a facility manager checks every morning.</p>
+
+    <h3>Tier 3 — Command Center (investors, accelerators, campus demos, Phase 3)</h3>
+    <p>This is where your design brief applies in full. Scoped as a distinct, demo-oriented surface — not the daily-use tool:</p>
+    <ul>
+      <li><strong>Signature moment — Ghost Replay™:</strong> reconstructs expected vs. actual generation side by side, root causes emerging as the timeline plays, recovery potential calculated live. This is the single feature most likely to make a judge remember the product — keep it as the centerpiece, not one feature among many.</li>
+      <li><strong>Hero sequence:</strong> photon particles traveling to panels, some disappearing (ghost generation), AI tracing the missing energy, causes resolving as a percentage breakdown, recovered energy flowing back — communicates the product thesis in ~15 seconds without requiring anyone to read.</li>
+      <li><strong>Interactive digital twin:</strong> Campus → Building → Rooftop → Array → String → Panel, smooth zoom transitions, click-through to efficiency/temperature/RUL per panel.</li>
+    </ul>
+
+    <h4>Tech stack</h4>
+    <p>React Three Fiber + Drei for the 3D twin, GSAP ScrollTrigger for narrative transitions, Lenis for cinematic smooth scroll, custom GLSL shaders for photon/energy-flow/heat-distortion effects, Motion for micro-interactions. This is a Phase 3 build — it depends on the Asset Graph (§2, §9) actually existing as real data, not mock JSON.</p>
+
+    <h4>Visual system (as specified)</h4>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Purpose</th><th>Color direction</th></tr>
+        <tr><td>Background</td><td>Deep graphite</td></tr>
+        <tr><td>Healthy assets</td><td>Electric cyan</td></tr>
+        <tr><td>Warnings</td><td>Amber</td></tr>
+        <tr><td>Failures</td><td>Neon red</td></tr>
+        <tr><td>Energy flow</td><td>Solar gold</td></tr>
+        <tr><td>AI activity</td><td>Violet</td></tr>
+        <tr><td>Carbon metrics</td><td>Emerald</td></tr>
+      </table>
+    </div>
+    <p>Typography: Geist / Satoshi / General Sans for display, IBM Plex Mono / JetBrains Mono for metrics — deliberately avoiding generic sustainability-green branding in favor of an engineering aesthetic. (This document is styled in that same system.)</p>
+  </section>
+
+  <!-- 12 SCALING -->
+  <section id="scaling">
+    <h2><span class="num">12</span> Scaling Strategy</h2>
+    <p class="subhead">Four dimensions, matching your own deck exactly, plus the multi-tenant data model that makes it mechanical rather than a rewrite.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Dimension</th><th>Method</th><th>Outcome</th></tr>
+        <tr><td class="mono">Operational</td><td>"Helio-Twin in a Box" — pre-configured IoT kits</td><td>60% faster installation vs. custom deployment</td></tr>
+        <tr><td class="mono">Organizational</td><td>Train-the-Trainer for regional EPC contractors</td><td>Decentralized, self-sustaining installer ecosystem</td></tr>
+        <tr><td class="mono">Technology</td><td>Federated Learning — local training, shared weights only</td><td>Data sovereignty, lower bandwidth, easier institutional buy-in</td></tr>
+        <tr><td class="mono">Financial</td><td>Annual SaaS subscription, offset by energy savings</td><td>Predictable OpEx, no CapEx procurement friction</td></tr>
+      </table>
+    </div>
+
+    <p>The data model that makes this real: <code>Tenant → Region → Country → Campus → Building</code> sits above the Asset Graph from §2. Weather models, grid-carbon-intensity, and language all become per-region parameters rather than hardcoded assumptions — the exact gap the blueprint flags before expansion into Kenya, UAE, or elsewhere in the Global South.</p>
+  </section>
+
+  <!-- 13 COST -->
+  <section id="cost">
+    <h2><span class="num">13</span> Cost Optimization Strategy</h2>
+    <p class="subhead">Real numbers from your own Smart Solution costing, extended into a FinOps discipline for when you're running more than one campus.</p>
+
+    <h3>Phase-by-phase hardware/infra cost</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Phase</th><th>Scope</th><th>Cost</th></tr>
+        <tr><td class="mono">Prototype (0–2 mo)</td><td>Simulated dataset, NASA POWER API, Streamlit, AI models</td><td class="mono">₹0–₹1,000</td></tr>
+        <tr><td class="mono">Pilot (3–6 mo)</td><td>One building, one inverter, one gateway</td><td class="mono">₹3,000–₹5,000</td></tr>
+        <tr><td class="mono">Campus scale (7–12 mo)</td><td>Multiple buildings, central monitoring</td><td class="mono">₹30,000</td></tr>
+      </table>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Component</th><th>Unit cost</th></tr>
+        <tr><td>ESP32-WROOM-32</td><td class="mono">₹500</td></tr>
+        <tr><td>RS485-to-TTL converter</td><td class="mono">₹300</td></tr>
+        <tr><td>NASA POWER API / Python libs / Streamlit / Firebase</td><td class="mono">₹0</td></tr>
+      </table>
+    </div>
+
+    <h3>Cloud FinOps discipline (new in this roadmap)</h3>
+    <ul>
+      <li>Track <strong>cost per campus</strong>, <strong>cost per telemetry point</strong>, and — the metric that ties engineering spend directly to your mission — <strong>cost per avoided kWh</strong>.</li>
+      <li>Every managed service chosen in §7 scales to zero when idle; no service is provisioned ahead of a validated need.</li>
+      <li>Inference cost (Groq, forecasting compute) tracked separately from storage/DB cost so a pricing model can be built before the first paying pilot, not after.</li>
+    </ul>
+  </section>
+
+  <!-- 14 MIGRATION -->
+  <section id="migration">
+    <h2><span class="num">14</span> Enterprise Migration Strategy</h2>
+    <p class="subhead">Not a rewrite — a swap of adapters behind the ports defined in §2, triggered by real scale signals rather than a calendar date.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Prototype</th><th>Enterprise</th><th>Migration trigger</th></tr>
+        <tr><td class="mono">Neon</td><td class="mono">Aurora</td><td>Sustained write load exceeds serverless Postgres comfort zone</td></tr>
+        <tr><td class="mono">Mosquitto</td><td class="mono">Kafka</td><td>&gt;1 campus streaming concurrently; need for replay/audit of the event log</td></tr>
+        <tr><td class="mono">Docker Compose</td><td class="mono">Kubernetes</td><td>Second isolated customer environment needed</td></tr>
+        <tr><td class="mono">Telegram/WhatsApp Cloud (free tier)</td><td class="mono">WhatsApp Business</td><td>Message volume exceeds free-tier limits</td></tr>
+        <tr><td class="mono">Vercel/Fly.io</td><td class="mono">EKS</td><td>Compliance requirement for dedicated VPC / region control</td></tr>
+        <tr><td class="mono">pgvector</td><td class="mono">Pinecone</td><td>RAG corpus grows beyond single-node vector search performance</td></tr>
+        <tr><td class="mono">Redis (Upstash)</td><td class="mono">Elasticache</td><td>Event throughput exceeds free-tier command budget</td></tr>
+        <tr><td class="mono">MinIO</td><td class="mono">S3</td><td>Multi-region redundancy required for uploaded ESG/thermal imagery</td></tr>
+      </table>
+    </div>
+    <p>Because every one of these sits behind a domain port (§2), each row in this table is a swapped adapter and a config change — not a rewritten feature.</p>
+  </section>
+
+  <!-- 15 RISKS -->
+  <section id="risks">
+    <h2><span class="num">15</span> Risks &amp; Mitigations</h2>
+    <p class="subhead">Your own risk matrix, plus the operational gaps the blueprint review flagged as currently unaddressed.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Risk</th><th>Impact / Probability</th><th>Mitigation</th></tr>
+        <tr><td>Tech fatigue — excessive alerts reduce engagement</td><td><span class="badge b-red">High / High</span></td><td>Adaptive notification thresholds, alert prioritization</td></tr>
+        <tr><td>Model drift as IoT hardware ages</td><td><span class="badge b-red">High / High</span></td><td>Continuous drift monitoring + scheduled retraining (§10)</td></tr>
+        <tr><td>Data breaches — grid data vulnerabilities</td><td><span class="badge b-amber">High / Low</span></td><td>RBAC + immutable audit logs (§8)</td></tr>
+        <tr><td>Knowledge loss if "Green Champions" leave</td><td><span class="badge b-amber">High / Low</span></td><td>Digitize SOPs, don't rely on tribal knowledge</td></tr>
+        <tr><td>No disaster recovery plan</td><td><span class="badge b-red">High / Medium</span></td><td>Daily backups, point-in-time recovery, quarterly restore drills (§13, §9)</td></tr>
+        <tr><td>No defined SRE objectives</td><td><span class="badge b-amber">Medium / Medium</span></td><td>SLOs formalized in §9 before first real pilot, not after an incident</td></tr>
+        <tr><td>Sensor drift misread as soiling</td><td><span class="badge b-amber">Medium / Medium</span></td><td>Cross-reference hardware voltage against NASA satellite irradiance over months (already designed)</td></tr>
+      </table>
+    </div>
+
+    <h3>Alignment with international frameworks (already established)</h3>
+    <p>IEA Energy Digitalization directives, GHG Protocol Scope 2 Carbon Accounting, MNRE Smart Grid Monitoring mandates, NREL Digital Twin research — this roadmap doesn't need to re-derive that alignment, only ship the engineering that makes the claims auditable.</p>
+  </section>
+
+  <!-- 16 FINAL ASSESSMENT -->
+  <section id="assessment">
+    <h2><span class="num">16</span> Final Technical Assessment</h2>
+    <p class="subhead">An honest read on where this stands and the single highest-leverage next move.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Category</th><th>Score</th></tr>
+        <tr><td>Problem selection</td><td class="mono">10/10 — a genuine, global operational problem</td></tr>
+        <tr><td>Market relevance</td><td class="mono">9.5/10 — strong fit for Global South, ESG mandates</td></tr>
+        <tr><td>Technical vision</td><td class="mono">9.2/10 — digital twin + AI + edge + ESG is ambitious and coherent</td></tr>
+        <tr><td>Architecture design</td><td class="mono">8.8/10 → this roadmap closes the enterprise-primitive gaps</td></tr>
+        <tr><td>DevOps readiness</td><td class="mono">8.0/10 → addressed in §9, §14</td></tr>
+        <tr><td>Cloud economics</td><td class="mono">9.5/10 — scale-to-zero discipline maintained throughout</td></tr>
+        <tr><td>Investor readiness</td><td class="mono">9.4/10 — strong story, now backed by a working system</td></tr>
+      </table>
+    </div>
+
+    <h3>The single biggest lever</h3>
+    <p>If only one thing from this roadmap gets built first, your own blueprint already named it correctly: the <strong>Asset Graph</strong> (§2). Root cause attribution, blast-radius analysis, simulation, the digital twin visualization, and eventually the Graph Neural Network for cascading-failure detection all depend on the campus being modeled as a graph rather than a flat asset list. Everything else in this roadmap is easier to sequence once that exists — it's the one piece of architecture that, if skipped, forces a rewrite later rather than an adapter swap.</p>
+
+    <h3>Immediate next three actions</h3>
+    <ol>
+      <li>Ship Sprint 1 — swap the naive expected-output baseline for a pvlib physics model calibrated to your real 308-panel array.</li>
+      <li>Decide the naming question in §1 before writing anything with "SpectraGRID" in a package name or repo.</li>
+      <li>Start the Asset Graph schema (§2, Sprint 9) in parallel with Sprint 1–4 — it's small enough to design early and everything downstream benefits from it existing sooner.</li>
+    </ol>
+  </section>
+
+</main>
+</div>
+
+<footer>Helio-Twin → SpectraGRID Implementation Roadmap · Synthesized from HelioTwin_PrototypeBlueprint.docx, Assignment4_ESG_Helio_Twin.docx, and three project decks · Prepared for Satvik Shrivastava</footer>
+
+</body>
+</html>

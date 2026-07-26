@@ -1,0 +1,108 @@
+{
+  "model_version": "v1.0.0",
+  "training_date": "2026-07-25T22:18:16.543161",
+  "classes": [
+    "INVERTER_DEGRADATION",
+    "INVERTER_TRIP",
+    "NORMAL",
+    "PARTIAL_STRING_FAILURE",
+    "SOILING"
+  ],
+  "feature_cols": [
+    "irradiance_ghi",
+    "ambient_temperature",
+    "module_temperature",
+    "dc_voltage",
+    "dc_current",
+    "dc_power",
+    "ac_voltage",
+    "ac_current",
+    "ac_power",
+    "frequency",
+    "power_factor",
+    "inverter_temperature",
+    "inverter_efficiency"
+  ],
+  "classification_report": {
+    "INVERTER_DEGRADATION": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2105.0
+    },
+    "INVERTER_TRIP": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 351.0
+    },
+    "NORMAL": {
+      "precision": 0.8672161172161172,
+      "recall": 0.9995777918513827,
+      "f1-score": 0.9287045209375306,
+      "support": 9474.0
+    },
+    "PARTIAL_STRING_FAILURE": {
+      "precision": 1.0,
+      "recall": 0.3087885985748218,
+      "f1-score": 0.47186932849364793,
+      "support": 2105.0
+    },
+    "SOILING": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 0.0
+    },
+    "accuracy": 0.8960456002850018,
+    "macro avg": {
+      "precision": 0.7734432234432235,
+      "recall": 0.6616732780852409,
+      "f1-score": 0.6801147698862356,
+      "support": 14035.0
+    },
+    "weighted avg": {
+      "precision": 0.910367331279337,
+      "recall": 0.8960456002850018,
+      "f1-score": 0.8726634533552757,
+      "support": 14035.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      2105,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      351,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      9470,
+      0,
+      4
+    ],
+    [
+      0,
+      0,
+      1450,
+      650,
+      5
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ]
+}

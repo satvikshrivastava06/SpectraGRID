@@ -1,0 +1,4 @@
+asset_id,campus_id,building_id,rooftop_id,array_id,string_id,inverter_id,capacity_kwp,panel_count,panel_model,panel_efficiency,temperature_coefficient,tilt_deg,azimuth_deg,inverter_capacity_kw,inverter_model,commission_date,latitude,longitude
+AST-JAB-ROOF-A,camp-1,bld-1,roof-1a,arr-1,str-1,inv-1,500.0,1250,SpectraMono-400W,0.215,-0.0035,20.0,180.0,500.0,SpectraGrid-500K,2022-03-15,23.18,79.98
+AST-JAB-ROOF-B,camp-1,bld-2,roof-2a,arr-2,str-2,inv-2,350.0,875,SpectraMono-400W,0.215,-0.0035,15.0,180.0,350.0,SpectraGrid-350K,2022-06-10,23.18,79.98
+AST-JAB-CARPORT,camp-1,bld-3,carport-1,arr-3,str-3,inv-3,250.0,625,Bifacial-400W,0.22,-0.0033,10.0,180.0,250.0,SpectraGrid-250K,2023-01-20,23.18,79.98

@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: spectragrid_db
+      POSTGRES_USER: spectragrid
+      POSTGRES_PASSWORD: spectragrid
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U spectragrid -d spectragrid_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ml-service:
+    build:
+      context: ./spectragrid-app/server/ml-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ./spectragrid-app/server
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      ML_SERVICE_URL: http://ml-service:8000
+      DATABASE_URL: postgresql://spectragrid:spectragrid@timescaledb:5432/spectragrid_db
+      JWT_SECRET: spectragrid_antigravity_secret_key_2026
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3001/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./spectragrid-app
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:3001
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:

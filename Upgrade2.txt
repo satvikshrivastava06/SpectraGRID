@@ -1,0 +1,203 @@
+High Priority (should be visible in the prototype)
+1. Physics-Based Expected Energy Model
+
+Your documents discuss comparing expected vs. actual generation, but the prototype should visibly show how expected energy is calculated, not just the final number.
+
+Missing:
+
+Irradiance
+Module temperature
+Panel degradation
+Tilt & azimuth
+Seasonal correction
+Weather adjustment
+2. Ghost Generation Breakdown
+
+Instead of only displaying "Ghost Generation = 32 kWh", add an attribution panel:
+
+Ghost Generation
+────────────────────
+Dust Soiling          41%
+Inverter Fault        28%
+Grid Disturbance      17%
+Shading                9%
+Sensor Drift           5%
+
+This makes the platform explainable.
+
+3. Asset Hierarchy
+
+Your documentation talks about campus assets, but the UI should expose a navigable hierarchy:
+
+University
+ ├── Campus
+ │
+ ├── Building
+ │
+ ├── Rooftop
+ │
+ ├── Array
+ │
+ ├── String
+ │
+ ├── Panel
+ │
+ └── Inverter
+4. Decision Intelligence
+
+Your documents emphasize actionable intelligence, not just monitoring.
+
+Each alert should answer:
+
+Why?
+Financial impact
+Carbon impact
+Confidence
+Recommended action
+ROI
+Estimated resolution time
+5. Digital Twin Simulation
+
+A "What if?" mode is still missing.
+
+Example scenarios:
+
+Inverter fails
+Heavy dust accumulation
+Rain tomorrow
+Battery degradation
+Grid outage
+
+Show the resulting effects on:
+
+Energy
+Revenue
+Carbon
+Maintenance
+Medium Priority
+Renewable Asset Health Score
+
+One overall health score per asset.
+
+Example:
+
+Health Score
+
+Panels
+92%
+
+Inverter
+81%
+
+Battery
+76%
+
+Campus
+89%
+Maintenance Timeline
+
+Instead of isolated alerts:
+
+Detected
+
+↓
+
+Diagnosed
+
+↓
+
+Ticket Created
+
+↓
+
+Engineer Assigned
+
+↓
+
+Resolved
+
+↓
+
+Learning Stored
+Carbon Intelligence
+
+Your ESG document discusses carbon accounting and governance. Surface this in the UI with:
+
+Live avoided emissions
+Carbon intensity
+ESG trends
+dMRV exports
+
+This aligns directly with the metrics you've documented.
+
+Water-Energy Nexus
+
+Your documents highlight intelligent cleaning decisions based on weather. Add a visual panel showing:
+
+Rain forecast
+Cleaning cost
+Water saved
+Recommendation
+
+Again, this directly reflects your documented measurement approach.
+
+Lower Priority (Enterprise Features)
+Multi-campus management
+Role-based access
+Audit logs
+Notification center
+Report generation
+API explorer
+System observability dashboard
+Deployment health
+
+These improve enterprise readiness but are not essential for a prototype.
+
+One thing I would add that isn't obvious from the documents
+
+I'd introduce a Mission Control home screen.
+
+When someone opens SpectraGrid, instead of seeing cards and charts, they should immediately understand the operational state:
+
+Renewable Mission Control
+
+Campuses: 4
+
+Ghost Generation Today
+31.8 kWh
+
+Revenue Loss
+₹4,820
+
+Carbon Opportunity
+22.4 kg CO₂
+
+Critical Assets
+2
+
+Maintenance ROI
+₹18,200
+
+AI Confidence
+96%
+
+Below that:
+
+Interactive Digital Twin
+Live Event Timeline
+Root Cause Graph
+Decision Recommendations
+ESG Impact
+
+That single screen communicates the platform's value within seconds and ties together the themes from your documentation.
+
+Overall assessment
+
+Comparing your documents with the prototype direction you've described:
+
+Concept coverage: ~95% (the ideas are there)
+Interactive implementation: ~65–70%
+Enterprise architecture readiness: ~85%
+Demo readiness: ~80%
+
+The remaining gap is not adding many new concepts—it's making the existing concepts interactive, explainable, and connected into a coherent operational workflow.

@@ -1,0 +1,221 @@
+{
+    "users": [
+        {
+            "id": "u-1",
+            "username": "admin@spectragrid.ai",
+            "password": "pbkdf2_sha256$password123",
+            "orgId": "org-1",
+            "role": "Administrator"
+        },
+        {
+            "id": "u-2",
+            "username": "ops@spectragrid.ai",
+            "password": "pbkdf2_sha256$password123",
+            "orgId": "org-1",
+            "role": "Operator"
+        },
+        {
+            "id": "u-3",
+            "username": "exec@spectragrid.ai",
+            "password": "pbkdf2_sha256$password123",
+            "orgId": "org-1",
+            "role": "Manager"
+        },
+        {
+            "id": "u-4",
+            "username": "auditor@esg.org",
+            "password": "pbkdf2_sha256$password123",
+            "orgId": "org-1",
+            "role": "Auditor"
+        }
+    ],
+    "organizations": [
+        {
+            "id": "org-1",
+            "name": "SpectraGRID Global Labs",
+            "subscription": "Enterprise"
+        }
+    ],
+    "campuses": [
+        {
+            "id": "camp-1",
+            "orgId": "org-1",
+            "name": "Jabalpur Campus (150 kWp)",
+            "size": 150,
+            "rate": 7.8,
+            "lat": 23.18,
+            "lng": 79.98
+        },
+        {
+            "id": "camp-2",
+            "orgId": "org-1",
+            "name": "Nairobi Facility (300 kWp)",
+            "size": 300,
+            "rate": 12.2,
+            "lat": -1.29,
+            "lng": 36.82
+        },
+        {
+            "id": "camp-3",
+            "orgId": "org-1",
+            "name": "Dubai Port Array (500 kWp)",
+            "size": 500,
+            "rate": 9.5,
+            "lat": 25.26,
+            "lng": 55.3
+        }
+    ],
+    "buildings": [
+        {
+            "id": "bld-1",
+            "campusId": "camp-1",
+            "name": "Block-A Rooftop",
+            "efficiencyDrop": 0.246
+        },
+        {
+            "id": "bld-2",
+            "campusId": "camp-1",
+            "name": "Block-B Facility",
+            "efficiencyDrop": 0.125
+        },
+        {
+            "id": "bld-3",
+            "campusId": "camp-1",
+            "name": "Main Hall Canopy",
+            "efficiencyDrop": 0.045
+        }
+    ],
+    "rooftops": [
+        {
+            "id": "roof-1",
+            "buildingId": "bld-1",
+            "name": "Block-A Rooftop",
+            "tilt": 20.0,
+            "azimuth": 180.0
+        }
+    ],
+    "arrays": [
+        {
+            "id": "arr-1",
+            "rooftopId": "roof-1",
+            "buildingId": "bld-1",
+            "name": "Array B3",
+            "soilingIndex": 0.42
+        }
+    ],
+    "strings": [
+        {
+            "id": "str-4",
+            "arrayId": "arr-1",
+            "name": "String 4",
+            "status": "warning"
+        }
+    ],
+    "panels": [
+        {
+            "id": "pnl-Panel-B12",
+            "stringId": "str-4",
+            "inverterId": "inv-2",
+            "name": "Panel B12",
+            "status": "critical",
+            "voltage": 8.0,
+            "current": 1.2,
+            "temperature": 68.2
+        }
+    ],
+    "inverters": [
+        {
+            "id": "inv-1",
+            "buildingId": "bld-1",
+            "name": "Inverter 01",
+            "status": "nominal",
+            "efficiency": 0.962,
+            "temperature": 41.5,
+            "capacityKw": 75
+        },
+        {
+            "id": "inv-2",
+            "buildingId": "bld-1",
+            "name": "Inverter 02",
+            "status": "degraded",
+            "efficiency": 0.68,
+            "temperature": 72.0,
+            "capacityKw": 75
+        }
+    ],
+    "batteries": [
+        {
+            "id": "bat-1",
+            "campusId": "camp-1",
+            "buildingId": "bld-1",
+            "name": "Storage Unit Battery-X1",
+            "status": "nominal",
+            "stateOfHealth": 0.91,
+            "cycleCount": 312,
+            "temperature": 28.0
+        }
+    ],
+    "telemetry": {
+        "assetId": "AST-JAB-ROOF-A",
+        "voltage": 230.5,
+        "current": 12.8,
+        "power": 2.94,
+        "irradiance": 842,
+        "temperature": 38.4,
+        "mqttRate": 125,
+        "mqttLag": 14,
+        "throughput": 4850,
+        "inferenceCost": 0.082
+    },
+    "telemetryLog": [],
+    "alerts": [
+        {
+            "id": "INC-204",
+            "node": "Inverter 02",
+            "severity": "warning",
+            "message": "Thermal degradation anomaly detected. Internal temperature exceeded 72°C.",
+            "status": "active",
+            "timestamp": "18:42:01"
+        },
+        {
+            "id": "INC-203",
+            "node": "String 04 / Panel B12",
+            "severity": "critical",
+            "message": "Voltage drop below 12V. Expected 32V under current irradiance. Unscheduled soiling flagged.",
+            "status": "active",
+            "timestamp": "17:15:30"
+        },
+        {
+            "id": "INC-198",
+            "node": "Grid Connection",
+            "severity": "info",
+            "message": "Frequency sync stabilizer active. Grid fluctuating between 49.8Hz and 50.2Hz.",
+            "status": "resolved",
+            "timestamp": "15:30:10"
+        }
+    ],
+    "recommendations": [
+        {
+            "id": "REC-001",
+            "assetId": "Panel B12",
+            "trigger": "incident",
+            "what": "Panel B12 voltage drop alert INC-203 active. Output below 12V.",
+            "why": "Bypass diode short-circuit combined with heavy surface dust load on Array B3.",
+            "whatNext": "Cascading voltage restriction limits String 4 yield. Daily loss compounds.",
+            "action": "Clean Array B3 panels and replace faulty bypass diode in junction box.",
+            "doNothing": "30-day cumulative loss: ₹12k revenue and 0.4 tCO₂e Scope 2 penalty.",
+            "financialDelta": -4200,
+            "carbonDelta": -0.4,
+            "confidence": 95,
+            "severity": "critical"
+        }
+    ],
+    "auditLogs": [
+        {
+            "timestamp": "2026-07-20T21:00:00Z",
+            "userId": "u-2",
+            "action": "LOGIN",
+            "details": "Successful Authentication from 192.168.1.45"
+        }
+    ]
+}

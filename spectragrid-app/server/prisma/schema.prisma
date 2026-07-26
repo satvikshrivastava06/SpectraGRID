@@ -1,0 +1,325 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── Organization ───────────────────────────────────────────────────────────
+
+model Organization {
+  id           String   @id @default(uuid())
+  name         String
+  subscription String   @default("Enterprise")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users     User[]
+  campuses  Campus[]
+
+  @@map("organizations")
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+model User {
+  id       String @id @default(uuid())
+  username String @unique
+  password String
+  role     String @default("Operator")
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+
+  auditLogs AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([username])
+  @@map("users")
+}
+
+// ─── Asset Hierarchy ─────────────────────────────────────────────────────────
+
+model Campus {
+  id   String @id @default(uuid())
+  name String
+  size Float  @default(0)
+  rate Float  @default(7.8)
+  lat  Float  @default(23.18)
+  lng  Float  @default(79.98)
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+
+  buildings Building[]
+  batteries Battery[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("campuses")
+}
+
+model Building {
+  id             String @id @default(uuid())
+  name           String
+  efficiencyDrop Float  @default(0.0)
+
+  campus   Campus @relation(fields: [campusId], references: [id])
+  campusId String
+
+  rooftops Rooftop[]
+  inverters Inverter[]
+  batteries Battery[]
+
+  @@map("buildings")
+}
+
+model Rooftop {
+  id      String @id @default(uuid())
+  name    String
+  tilt    Float  @default(20.0)
+  azimuth Float  @default(180.0)
+
+  building   Building @relation(fields: [buildingId], references: [id])
+  buildingId String
+
+  arrays SolarArray[]
+
+  @@map("rooftops")
+}
+
+model SolarArray {
+  id          String @id @default(uuid())
+  name        String
+  soilingIndex Float  @default(0.0)
+
+  rooftop   Rooftop @relation(fields: [rooftopId], references: [id])
+  rooftopId String
+
+  strings SolarString[]
+
+  @@map("arrays")
+}
+
+model SolarString {
+  id     String @id @default(uuid())
+  name   String
+  status String @default("nominal")
+
+  array   SolarArray @relation(fields: [arrayId], references: [id])
+  arrayId String
+
+  panels Panel[]
+
+  @@map("strings")
+}
+
+model Panel {
+  id          String @id @default(uuid())
+  name        String
+  status      String @default("nominal")
+  voltage     Float  @default(0.0)
+  current     Float  @default(0.0)
+  temperature Float  @default(25.0)
+
+  string   SolarString @relation(fields: [stringId], references: [id])
+  stringId String
+
+  @@map("panels")
+}
+
+model Inverter {
+  id          String @id @default(uuid())
+  name        String
+  status      String @default("nominal")
+  efficiency  Float  @default(0.96)
+  temperature Float  @default(40.0)
+  capacityKw  Float  @default(75.0)
+
+  building   Building @relation(fields: [buildingId], references: [id])
+  buildingId String
+
+  @@map("inverters")
+}
+
+model Battery {
+  id            String @id @default(uuid())
+  name          String
+  status        String @default("nominal")
+  stateOfHealth Float  @default(1.0)
+  cycleCount    Int    @default(0)
+  temperature   Float  @default(25.0)
+
+  campus     Campus?   @relation(fields: [campusId], references: [id])
+  campusId   String?
+  building   Building? @relation(fields: [buildingId], references: [id])
+  buildingId String?
+
+  @@map("batteries")
+}
+
+// ─── Telemetry (TimescaleDB hypertable — see migration SQL) ──────────────────
+
+model Telemetry {
+  id        String   @id @default(uuid())
+  assetId   String
+  timestamp DateTime @default(now())
+
+  irradianceGhi      Float @default(0)
+  irradianceDni      Float @default(0)
+  irradianceDhi      Float @default(0)
+  ambientTemperature Float @default(25)
+  moduleTemperature  Float @default(25)
+  humidity           Float @default(50)
+  windSpeed          Float @default(2)
+
+  dcVoltage  Float @default(0)
+  dcCurrent  Float @default(0)
+  dcPower    Float @default(0)
+  acVoltage  Float @default(0)
+  acCurrent  Float @default(0)
+  acPower    Float @default(0)
+  frequency  Float @default(50)
+  powerFactor Float @default(0.99)
+
+  inverterTemperature Float @default(40)
+  inverterEfficiency  Float @default(0.96)
+
+  status    String @default("OPERATIONAL")
+  faultCode Int    @default(0)
+
+  @@index([assetId, timestamp])
+  @@map("telemetry")
+}
+
+// ─── Weather ─────────────────────────────────────────────────────────────────
+
+model Weather {
+  id        String   @id @default(uuid())
+  campusId  String
+  timestamp DateTime @default(now())
+
+  ghi         Float @default(0)
+  dni         Float @default(0)
+  dhi         Float @default(0)
+  temperature Float @default(25)
+  windSpeed   Float @default(2)
+  humidity    Float @default(50)
+
+  @@index([campusId, timestamp])
+  @@map("weather")
+}
+
+// ─── Anomalies & Incidents ───────────────────────────────────────────────────
+
+model Anomaly {
+  id          String   @id @default(uuid())
+  assetId     String
+  timestamp   DateTime @default(now())
+  isAnomalous Boolean  @default(false)
+  anomalyScore Float   @default(0)
+  rawDecisionScore Float @default(0)
+
+  rootCauses RootCause[]
+
+  @@index([assetId])
+  @@map("anomalies")
+}
+
+model RootCause {
+  id             String @id @default(uuid())
+  predictedClass String
+  confidence     Float  @default(0)
+  shapAttribution Json  @default("{}")
+  rootCauseProbabilities Json @default("{}")
+
+  anomaly   Anomaly @relation(fields: [anomalyId], references: [id])
+  anomalyId String
+
+  @@map("root_causes")
+}
+
+model Incident {
+  id        String   @id @default(uuid())
+  assetId   String
+  severity  String   @default("info")
+  message   String
+  status    String   @default("active")
+  timestamp DateTime @default(now())
+
+  @@index([assetId, timestamp])
+  @@map("incidents")
+}
+
+// ─── Recommendations ─────────────────────────────────────────────────────────
+
+model Recommendation {
+  id             String   @id @default(uuid())
+  assetId        String
+  trigger        String
+  what           String
+  why            String
+  whatNext       String
+  action         String
+  doNothing      String
+  financialDelta Float    @default(0)
+  carbonDelta    Float    @default(0)
+  confidence     Float    @default(0)
+  severity       String   @default("info")
+  createdAt      DateTime @default(now())
+
+  @@map("recommendations")
+}
+
+// ─── Maintenance ─────────────────────────────────────────────────────────────
+
+model MaintenanceWorkOrder {
+  id              String   @id @default(uuid())
+  assetId         String
+  action          String
+  reason          String
+  cost            Float    @default(0)
+  downtimeMinutes Int      @default(0)
+  technician      String   @default("")
+  resolution      String   @default("")
+  timestamp       DateTime @default(now())
+  completedAt     DateTime?
+
+  @@map("maintenance_work_orders")
+}
+
+// ─── Model Versions ──────────────────────────────────────────────────────────
+
+model ModelVersion {
+  id             String   @id @default(uuid())
+  version        String
+  trainingDate   DateTime @default(now())
+  f1Score        Float    @default(0)
+  metricsJson    Json     @default("{}")
+  artifactPath   String
+
+  @@map("model_versions")
+}
+
+// ─── Audit Log ───────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  details   String
+  timestamp DateTime @default(now())
+
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@index([userId, timestamp])
+  @@map("audit_logs")
+}

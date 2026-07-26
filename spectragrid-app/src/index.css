@@ -1,0 +1,705 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+/* Geist — premium display typography for SpectraGRID brand lockup */
+@font-face {
+  font-family: 'Geist';
+  src: url('https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/Geist-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Colors */
+  --color-bg-graphite: #0c0d12;
+  --color-bg-panel: rgba(15, 17, 21, 0.7);
+  --color-cyan: #00F0FF;
+  --color-amber: #FFB800;
+  --color-red: #FF003C;
+  --color-gold: #FFC300;
+  --color-violet: #9D00FF;
+  --color-emerald: #00E676;
+
+  /* Text */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-text-tertiary: rgba(255, 255, 255, 0.4);
+
+  /* Fonts */
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-sans: 'Outfit', sans-serif;
+  --font-brand: 'Geist', 'Outfit', system-ui, sans-serif;
+
+  /* Brand — OKLCH for perceptually uniform energy accent */
+  --brand-accent: oklch(0.84 0.14 195);
+  --brand-accent-dim: oklch(0.72 0.12 195);
+  --brand-glow: oklch(0.84 0.14 195 / 0.35);
+  --brand-surface: oklch(0.14 0.015 260);
+  --brand-text: oklch(0.98 0.005 260);
+  --brand-text-muted: oklch(0.72 0.02 260 / 0.75);
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  /* Glows */
+  --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.3);
+  --glow-red: 0 0 20px rgba(255, 0, 60, 0.3);
+  --glow-amber: 0 0 20px rgba(255, 184, 0, 0.3);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Base scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-graphite);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+/* Layout Utilities */
+.mono {
+  font-family: var(--font-mono);
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #FFFFFF, rgba(255, 255, 255, 0.7));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: var(--space-4xl) 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.section-inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+  pointer-events: auto;
+}
+
+.section-eyebrow {
+  font-family: var(--font-mono);
+  color: var(--color-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.85rem;
+  margin-bottom: var(--space-md);
+}
+
+.section-title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.1;
+  font-weight: 600;
+  margin-bottom: var(--space-lg);
+  letter-spacing: -0.02em;
+}
+
+.section-subtitle {
+  font-size: 1.25rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  max-width: 700px;
+  margin-bottom: var(--space-2xl);
+}
+
+/* Glass & UI Elements */
+.glass-panel {
+  background: var(--color-bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+
+.metric-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-xs);
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  font-family: var(--font-sans);
+  border: none;
+  outline: none;
+}
+
+.btn-primary {
+  background: var(--color-cyan);
+  color: #000;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 4px;
+  box-shadow: var(--glow-cyan);
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+
+.btn-primary:hover {
+  background: #fff;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+}
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 24px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.badge-red {
+  background: rgba(255, 0, 60, 0.1);
+  color: var(--color-red);
+  border: 1px solid rgba(255, 0, 60, 0.3);
+}
+
+.badge-amber {
+  background: rgba(255, 184, 0, 0.1);
+  color: var(--color-amber);
+  border: 1px solid rgba(255, 184, 0, 0.3);
+}
+
+@keyframes pulse-glow {
+  0% {
+    opacity: 0.8;
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
+  }
+
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(255, 0, 60, 0.6);
+  }
+
+  100% {
+    opacity: 0.8;
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
+  }
+}
+
+/* ── SpectraGRID Cinematic Navbar ── */
+.cinematic-nav {
+  background: var(--nav-glass, rgba(15, 17, 21, 0.45));
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: visible;
+  transition: background 0.6s ease, border-color 0.4s ease;
+}
+
+.cinematic-nav__shadow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  box-shadow:
+    inset 0 -12px 28px rgba(0, 0, 0, 0.45),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.cinematic-nav__fresnel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  border-bottom: 1px solid var(--nav-edge, rgba(0, 240, 255, 0.4));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 0 24px var(--nav-glow, rgba(0, 240, 255, 0.25));
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cinematic-nav__fresnel.is-flash {
+  border-bottom-color: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 0 40px rgba(255, 255, 255, 0.35),
+    0 0 80px var(--nav-glow, rgba(0, 240, 255, 0.5));
+}
+
+.cinematic-nav__chroma {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  border-top: 1px solid rgba(255, 80, 120, 0.12);
+  border-bottom: 1px solid rgba(80, 200, 255, 0.18);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  overflow: hidden;
+}
+
+.cinematic-nav__rail {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 14px;
+  height: 1px;
+  pointer-events: none;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cinematic-nav__rail-glow {
+  position: absolute;
+  inset: -2px 0;
+  opacity: 0.7;
+}
+
+.cinematic-nav__reflection {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  margin-left: -90px;
+  margin-top: -90px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+}
+
+.cinematic-nav__trail {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.cinematic-nav__impact {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 7;
+}
+
+.cinematic-nav__impact>span:first-child {
+  position: absolute;
+  left: -22px;
+  top: -22px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid;
+}
+
+.cinematic-nav__impact-core {
+  position: absolute;
+  left: -16px;
+  top: -16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.cinematic-nav__liquid-track {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 5;
+  background-size: 200% 100%;
+  animation: nav-liquid-flow 0.9s linear infinite;
+}
+
+.cinematic-nav__node-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: screen;
+}
+
+.cinematic-nav__active-ring {
+  position: absolute;
+  inset: -4px -2px;
+  border-radius: 6px;
+  border: 1px solid;
+  pointer-events: none;
+}
+
+.cinematic-nav__content {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.cinematic-nav__content a,
+.cinematic-nav__content button,
+.cinematic-nav__content>div {
+  pointer-events: auto;
+}
+
+.cinematic-nav__field {
+  position: absolute;
+  inset: -6px -4px;
+  border-radius: 6px;
+  border: 1px solid;
+  pointer-events: none;
+  animation: nav-field-ripple 1.4s ease-out infinite;
+}
+
+@keyframes nav-field-ripple {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.9;
+  }
+
+  70% {
+    transform: scale(1.08);
+    opacity: 0.25;
+  }
+
+  100% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+}
+
+@keyframes nav-liquid-flow {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.cinematic-nav__cta {
+  border-radius: 4px;
+  transition: background 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+@media (max-width: 1100px) {
+  .cinematic-nav {
+    padding: 0 16px !important;
+    height: auto !important;
+    min-height: 72px;
+    flex-wrap: wrap;
+  }
+
+  .cinematic-nav__content {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  .cinematic-nav__canvas,
+  .cinematic-nav__liquid-track,
+  .cinematic-nav__rail {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SpectraGRID Brand — Logo + Hero Heading
+   ═══════════════════════════════════════════════════════════ */
+
+.spectra-logo__wordmark {
+  font-feature-settings: 'ss01' on, 'cv01' on;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Hero heading lockup ─── */
+.spectra-heading {
+  isolation: isolate;
+  pointer-events: auto;
+}
+
+.spectra-heading__backdrop {
+  position: absolute;
+  inset: -20% -10%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.spectra-heading__particles {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+}
+
+.spectra-heading__grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image:
+    linear-gradient(oklch(0.84 0.14 195 / 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.84 0.14 195 / 0.5) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, black 20%, transparent 75%);
+}
+
+.spectra-heading__volumetric {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 55% 45% at 50% 40%,
+      oklch(0.84 0.14 195 / 0.08) 0%,
+      transparent 70%);
+}
+
+.spectra-heading__energy-lines {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.04;
+  background: repeating-linear-gradient(125deg,
+      transparent,
+      transparent 80px,
+      oklch(0.84 0.14 195) 80px,
+      oklch(0.84 0.14 195) 81px);
+  background-size: 200% 200%;
+}
+
+.spectra-heading__title-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.spectra-heading__title {
+  position: relative;
+  display: inline-block;
+  margin: 0;
+  font-family: var(--font-brand);
+  font-size: clamp(3rem, 9vw, 6.5rem);
+  letter-spacing: 0.06em;
+  line-height: 0.95;
+  color: var(--brand-text);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.spectra-heading__title--depth {
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  text-shadow:
+    0 2px 24px oklch(0 0 0 / 0.5),
+    0 0 60px var(--brand-glow);
+  pointer-events: none;
+  user-select: none;
+  z-index: -1;
+}
+
+.spectra-heading__spectra {
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  margin-right: 0.22em;
+}
+
+.spectra-heading__accent {
+  color: var(--brand-accent);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-shadow:
+    0 0 30px var(--brand-glow),
+    0 0 80px oklch(0.84 0.14 195 / 0.15);
+}
+
+/* Energy scan highlight — subtle metallic pass across letterforms */
+.spectra-heading__scan {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 35%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      oklch(1 0 0 / 0.06) 35%,
+      oklch(0.84 0.14 195 / 0.18) 50%,
+      oklch(1 0 0 / 0.06) 65%,
+      transparent 100%);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.spectra-heading__tagline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45em 0.65em;
+  margin-top: clamp(20px, 3vw, 32px);
+  font-family: var(--font-brand);
+  font-size: clamp(0.85rem, 2vw, 1.05rem);
+  font-weight: 450;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
+.spectra-heading__tagline-word {
+  display: inline-block;
+}
+
+@media (max-width: 640px) {
+  .spectra-heading__title {
+    letter-spacing: 0.1em;
+  }
+
+  .spectra-heading__tagline {
+    letter-spacing: 0.18em;
+    gap: 0.35em 0.5em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .spectra-heading__scan,
+  .spectra-heading__energy-lines {
+    display: none;
+  }
+
+  .spectra-heading__particles {
+    display: none;
+  }
+}
+
+/* ─── Boot splash ─── */
+.spectra-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(0.12 0.015 260);
+  cursor: pointer;
+}
+
+.spectra-splash__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 45%,
+      oklch(0.84 0.14 195 / 0.06) 0%,
+      transparent 70%);
+  pointer-events: none;
+}
+
+.spectra-splash__grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image:
+    linear-gradient(oklch(0.84 0.14 195 / 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.84 0.14 195 / 0.6) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none;
+}
+
+.spectra-splash__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.spectra-splash__wordmark {
+  font-family: var(--font-brand);
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--brand-text);
+  margin: 0;
+}
+
+.spectra-splash__accent {
+  color: var(--brand-accent);
+  letter-spacing: 0.28em;
+}
+
+.spectra-splash__progress {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent,
+      var(--brand-accent),
+      transparent);
+  transform-origin: left center;
+  opacity: 0.6;
+}
