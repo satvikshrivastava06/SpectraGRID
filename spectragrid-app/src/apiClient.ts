@@ -27,10 +27,10 @@ function getAuthHeaders(extraHeaders: Record<string, string> = {}): Record<strin
     return headers;
 }
 
-// Async health check to see if local express server is running
+// Async health check to see if express server is running
 async function checkServerHealth() {
     try {
-        const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(600) });
+        const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(5000) });
         const data = await res.json();
         isServerOnline = data.status === 'healthy';
     } catch (e) {

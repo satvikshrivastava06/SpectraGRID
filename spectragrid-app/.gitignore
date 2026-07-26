@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Environment variable files
+.env
+.env.local
+.env.*.local
+# Allow .env.production (no secrets — just public API URL)
+!.env.production
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
