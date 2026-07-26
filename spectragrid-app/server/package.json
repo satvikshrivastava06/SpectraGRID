@@ -5,6 +5,8 @@
     "main": "src/index.ts",
     "scripts": {
         "start": "ts-node src/index.ts",
+        "start:prod": "node dist/index.js",
+        "build": "tsc --project tsconfig.json && node -e \"const fs=require('fs');fs.mkdirSync('dist/data',{recursive:true});fs.copyFileSync('src/data/db.json','dist/data/db.json');\"",
         "dev": "nodemon --watch src/**/*.ts --exec ts-node src/index.ts",
         "test": "ts-node --transpile-only test/api.test.ts",
         "db:generate": "prisma generate",
