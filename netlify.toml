@@ -1,0 +1,13 @@
+[build]
+  base    = "spectragrid-app"
+  command = "npm install && npm run build"
+  publish = "spectragrid-app/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA routing — redirect all paths to index.html
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
