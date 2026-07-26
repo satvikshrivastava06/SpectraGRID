@@ -1,7 +1,7 @@
 [build]
   base    = "spectragrid-app"
   command = "npm install && npm run build"
-  publish = "spectragrid-app/dist"
+  publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
