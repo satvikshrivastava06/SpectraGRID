@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { store } from '../store';
+import { scrollRef } from '../store';
 import { SpectraHeading } from '../components/branding';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -18,7 +18,7 @@ export default function HeroUI({ brandReady = true }: { brandReady?: boolean }) 
             start: 'top top',
             end: 'bottom bottom',
             onUpdate: (self) => {
-                store.scrollProgress = self.progress;
+                scrollRef.value = self.progress;
             }
         });
 

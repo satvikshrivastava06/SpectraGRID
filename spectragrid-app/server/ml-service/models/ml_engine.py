@@ -74,8 +74,11 @@ def detect_anomaly(telemetry: Dict[str, Any]) -> Dict[str, Any]:
     anomaly_score = float(np.clip((0.2 - raw_score) / 0.4, 0.0, 1.0))
     is_anomalous = bool(pred == -1 or anomaly_score > 0.45)
     
-    # Heuristic override for hard threshold physical faults
-    if telemetry.get("temperature", 0) > 70 or (telemetry.get("irradiance", 0) > 700 and telemetry.get("power", 10) < 1.5):
+    # Hardware safety ceiling only — a component above 70°C is a genuine
+    # physical risk regardless of model output. The irradiance/power
+    # threshold is removed: yield-deficit cases are now decided by the
+    # trained IsolationForest score alone, not a hardcoded guess.
+    if telemetry.get("temperature", 0) > 70:
         is_anomalous = True
         anomaly_score = max(anomaly_score, 0.85)
         

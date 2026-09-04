@@ -79,8 +79,14 @@ def compute_pvlib_expected_power(
     expected_ac_kw = expected_dc_kw * inverter_eff
     expected_ac_kw = np.round(expected_ac_kw, 3)
     
-    # Assuming 15-min interval granularity for kWh summation (or auto-detected frequency)
-    dt_hours = 0.25
+    # Derive interval granularity from actual data (median difference between consecutive timestamps in hours)
+    if len(df_weather.index) >= 2:
+        diffs = pd.Series(df_weather.index).diff().dropna()
+        dt_hours = float(diffs.dt.total_seconds().median() / 3600.0)
+        if pd.isna(dt_hours) or dt_hours <= 0:
+            dt_hours = 0.25
+    else:
+        dt_hours = 0.25
     total_expected_kwh = float(np.sum(expected_ac_kw) * dt_hours)
     
     time_series_res = []

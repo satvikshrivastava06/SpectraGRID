@@ -132,7 +132,7 @@ export default function ArchitectureUI() {
 
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-                    <div className="section-eyebrow">// SRE Command</div>
+                    <div className="section-eyebrow">SRE Command</div>
                     <h2 className="section-title">Infrastructure Observability</h2>
                     <p className="section-subtitle" style={{ margin: '0 auto', maxWidth: '560px' }}>
                         Real-time platform telemetry monitoring SpectraGRID's IoT ingestion pipeline, ML inference engine, and edge device fleet.

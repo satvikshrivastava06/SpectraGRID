@@ -27,7 +27,7 @@ export default function Footer() {
                 </p>
             </div>
             <div style={{ flex: 1, textAlign: 'right' }} className="mono">
-                © 2026 Spectra<strong style={{ color: 'var(--brand-accent)', fontWeight: 800 }}>GRID</strong>. Calibrated for 150 kWp Jabalpur Campus.
+                © 2026 Spectra<strong style={{ color: 'var(--brand-accent)', fontWeight: 800 }}>GRID</strong>. Calibrated for campuses.
             </div>
         </footer>
     );

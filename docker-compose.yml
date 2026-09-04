@@ -40,7 +40,6 @@ services:
       PORT: 3001
       ML_SERVICE_URL: http://ml-service:8000
       DATABASE_URL: postgresql://spectragrid:spectragrid@timescaledb:5432/spectragrid_db
-      JWT_SECRET: spectragrid_antigravity_secret_key_2026
     depends_on:
       timescaledb:
         condition: service_healthy

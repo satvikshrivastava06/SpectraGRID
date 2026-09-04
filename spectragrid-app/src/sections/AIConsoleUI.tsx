@@ -19,7 +19,7 @@ export default function AIConsoleUI() {
             <div className="section-inner" style={{ maxWidth: '1440px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}>
                     <div>
-                        <div className="section-eyebrow">// Decision Support</div>
+                        <div className="section-eyebrow">Decision Support</div>
                         <h2 className="section-title">AI Recommendation Console</h2>
                         <p className="section-subtitle">
                             Algorithms generate dynamic interventions based on real-time telemetry, model confidence variance, and financial recovery calculations.

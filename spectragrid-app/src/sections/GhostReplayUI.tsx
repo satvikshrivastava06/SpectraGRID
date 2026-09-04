@@ -264,7 +264,7 @@ export default function GhostReplayUI() {
 
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-                    <div className="section-eyebrow">// Digital Twin Sandbox</div>
+                    <div className="section-eyebrow">Digital Twin Sandbox</div>
                     <h2 className="section-title">Infrastructure Scenario Simulator</h2>
                     <p className="section-subtitle" style={{ margin: '0 auto', maxWidth: '620px' }}>
                         Simulate real-world stress events and instantly observe cascading impacts across energy, carbon, financial, and ESG dimensions.

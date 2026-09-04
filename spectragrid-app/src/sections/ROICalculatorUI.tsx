@@ -11,7 +11,7 @@ export default function ROICalculatorUI() {
             <div className="section-inner">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}>
                     <div>
-                        <div className="section-eyebrow">// Economic Justification</div>
+                        <div className="section-eyebrow">Economic Justification</div>
                         <h2 className="section-title">ROI Recovery Estimator</h2>
                         <p className="section-subtitle">
                             Map the economic return of mitigating ghost generation at your facilities. Enter your solar campus size to calculate performance benefits.

@@ -25,7 +25,7 @@ import DecisionPanel from './components/ui/DecisionPanel';
 import CommandCenter from './sections/CommandCenter';
 import CommandCenterTransition from './components/CommandCenterTransition';
 import TelemetryHUD from './components/ui/TelemetryHUD';
-import { store } from './store';
+import { store, scrollRef } from './store';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -83,7 +83,7 @@ function App() {
 
     const onTick = (time: number) => {
       lenis.raf(time * 1000);
-      store.scrollProgress = lenis.progress ?? 0;
+      scrollRef.value = lenis.progress ?? 0;
       updateStageFromScroll();
     };
 

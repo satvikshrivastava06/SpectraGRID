@@ -35,7 +35,7 @@ const DEFAULT_CONTEXT: DecisionContext = {
     assetId: 'Campus',
     severity: 'warning',
     what: 'Campus yielded 104 kWh against expected 138 kWh today.',
-    why: 'SHAP attribution: soiling 42%, grid instability 24%, inverter degradation 18%.',
+    why: 'Attribution: soiling 42%, grid instability 24%, inverter degradation 18%.',
     whatNext: 'Performance ratio will drop below 80% within 12 days without intervention.',
     action: 'Deploy automated dry-cleaning robot swarm for Block-A Array B3',
     doNothing: '30-day loss: ₹1,82,000 revenue + 0.9 tCO₂e additional Scope 2 liability.',
@@ -68,8 +68,9 @@ const DEFAULT_CONTEXT: DecisionContext = {
     ]
 };
 
+export const scrollRef = { value: 0 };
+
 const rawStore = {
-    scrollProgress: 0,
     stage: 0,
     selectedCampus: 'Jabalpur (150 kWp)',
     selectedRooftop: 'Block-A Rooftop',
@@ -122,7 +123,7 @@ export const ASSET_CONTEXTS: Record<string, DecisionContext> = {
     'Jabalpur Campus (150 kWp)': {
         trigger: 'asset-click', assetId: 'campus', severity: 'warning',
         what: 'Jabalpur Campus yielded 104 kWh vs expected 138 kWh today (PR: 84.5%).',
-        why: 'SHAP: soiling 42%, grid instability 24%, inverter degradation 18%, partial shading 10%.',
+        why: 'Attribution: soiling 42%, grid instability 24%, inverter degradation 18%, partial shading 10%.',
         whatNext: 'PR will breach 80% SLA within 8 days. String 4 estimated maintenance horizon: 45 days at current degradation rate.',
         action: 'Issue O&M work-order: Array B3 cleaning (5 days) + Inverter 02 thermal scan (14 days).',
         doNothing: '30-day cumulative: ₹1,82,000 revenue loss + 0.9 tCO₂e Scope 2 liability + SLA breach risk.',
@@ -158,7 +159,7 @@ export const ASSET_CONTEXTS: Record<string, DecisionContext> = {
     'Storage Unit Battery-X1': {
         trigger: 'asset-click', assetId: 'batteryX1', severity: 'info',
         what: 'Battery-X1 nominal. State-of-health: 91%. Cycle count: 312. Temp: 28°C.',
-        why: 'No anomalies. All SHAP indicators within 1σ of baseline fleet health model.',
+        why: 'No anomalies. All indicators within 1σ of baseline fleet health model.',
         whatNext: 'SoH reaches 80% replacement threshold in ~14 months at current cycle rate.',
         action: 'No immediate action. Schedule capacity baseline test at cycle 350.',
         doNothing: 'No near-term risk. Quarterly SoH monitoring sufficient.',
@@ -167,7 +168,7 @@ export const ASSET_CONTEXTS: Record<string, DecisionContext> = {
     'Inverter 01': {
         trigger: 'asset-click', assetId: 'inverter01', severity: 'info',
         what: 'Inverter 01 operating at 96.2% rated efficiency. All parameters nominal.',
-        why: 'Serviced 12 days ago. SHAP baseline variance < 0.5% across all sub-systems.',
+        why: 'Serviced 12 days ago. Baseline variance < 0.5% across all sub-systems.',
         whatNext: 'No predicted failures within 90 days. Next recommended service: 180 days.',
         action: 'No action required. Continue scheduled monitoring at 30-day intervals.',
         doNothing: 'No financial or carbon risk within planning horizon.',

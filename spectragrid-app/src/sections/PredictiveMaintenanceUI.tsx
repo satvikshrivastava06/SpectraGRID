@@ -4,7 +4,7 @@ export default function PredictiveMaintenanceUI() {
             <div className="section-inner">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}>
                     <div>
-                        <div className="section-eyebrow">// Asset Degradation Models</div>
+                        <div className="section-eyebrow">Asset Degradation Models</div>
                         <h2 className="section-title">Predictive Operations</h2>
                         <p className="section-subtitle">
                             Estimated maintenance horizons and failure timelines are continuously calculated using degradation models to plan maintenance windows before catastrophic failure.

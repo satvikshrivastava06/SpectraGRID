@@ -21,7 +21,7 @@ const VARIANT_SIZE: Record<SpectraLogoVariant, number> = {
   icon: 44,
   navbar: 52,
   hero: 150,
-  splash: 110,
+  splash: 128,
 };
 
 const WORDMARK_SIZE: Record<SpectraLogoVariant, string> = {

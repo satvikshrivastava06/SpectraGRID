@@ -4,7 +4,7 @@ export default function CTAUI() {
             <div className="section-inner" style={{ textAlign: 'center' }}>
                 <h2 className="section-title">Bring Prescriptive Intelligence to Your Solar Infrastructure</h2>
                 <p className="section-subtitle" style={{ margin: '0 auto 40px auto' }}>
-                    Stop letting invisible losses degrade your physical assets. Calibrate your first pvlib twin in minutes.
+                    Stop letting invisible losses degrade your physical assets. Calibrate your first physics-based twin in minutes.
                 </p>
                 <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
                     <button className="btn-primary mono">DEPLOY TWIN INSTANCE</button>

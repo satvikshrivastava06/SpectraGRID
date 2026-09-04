@@ -13,6 +13,23 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: ML_SERVICE_URL
-        value: http://localhost:8000
+        fromService:
+          name: spectragrid-ml
+          type: web
+          property: host
       - key: CORS_ORIGIN
-        value: https://your-frontend.vercel.app
+        value: https://your-frontend.netlify.app
+
+  - type: web
+    name: spectragrid-ml
+    runtime: docker
+    rootDir: ./ml-service
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ENV
+        value: production
+      - key: NODE_SERVICE_ORIGIN
+        fromService:
+          name: spectragrid-backend
+          type: web
+          property: host

@@ -3,28 +3,9 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 let isServerOnline = false;
-let authToken: string | null = localStorage.getItem('spectragrid_jwt_token');
-
-export function setAuthToken(token: string | null) {
-    authToken = token;
-    if (token) {
-        localStorage.setItem('spectragrid_jwt_token', token);
-    } else {
-        localStorage.removeItem('spectragrid_jwt_token');
-    }
-}
-
-export function getAuthToken(): string | null {
-    return authToken || localStorage.getItem('spectragrid_jwt_token');
-}
 
 function getAuthHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {
-    const headers: Record<string, string> = { ...extraHeaders };
-    const token = getAuthToken();
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-    return headers;
+    return extraHeaders;
 }
 
 // Async health check to see if express server is running
@@ -51,9 +32,6 @@ export async function loginUser(username: string, password: string) {
             body: JSON.stringify({ username, password })
         });
         const data = await res.json();
-        if (res.ok && data.token) {
-            setAuthToken(data.token);
-        }
         return { ok: res.ok, status: res.status, data };
     } catch (e: any) {
         return { ok: false, status: 500, data: { error: e.message || 'Network error during authentication.' } };
@@ -61,7 +39,6 @@ export async function loginUser(username: string, password: string) {
 }
 
 export async function logoutUser() {
-    setAuthToken(null);
     try {
         await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
     } catch (e) {

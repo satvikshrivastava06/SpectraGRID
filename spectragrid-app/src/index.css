@@ -61,6 +61,36 @@
   padding: 0;
 }
 
+/* Custom Cursor Across Entire Website */
+html,
+body,
+*,
+*::before,
+*::after {
+  cursor: url('/cursor.png') 5 2, auto !important;
+}
+
+button,
+a,
+[role="button"],
+.fluid-glass-btn,
+select,
+summary,
+[style*="cursor: pointer"],
+[style*="cursor:pointer"],
+[style*="cursor: default"],
+[style*="cursor:default"] {
+  cursor: url('/cursor.png') 5 2, pointer !important;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+textarea {
+  cursor: text !important;
+}
+
 html,
 body {
   background-color: transparent;
@@ -82,6 +112,30 @@ body {
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
+}
+
+/* Custom sleek scrollbar for panels and inner cards */
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) rgba(255, 255, 255, 0.02);
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.45);
 }
 
 /* Layout Utilities */
@@ -200,6 +254,73 @@ button {
 .btn-ghost:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Fluid Glass HUD & Controls */
+.fluid-glass-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(135% 135% at 20% 20%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 4px 14px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.fluid-glass-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transition: 0.5s ease;
+  pointer-events: none;
+}
+
+.fluid-glass-btn:hover::before {
+  left: 120%;
+}
+
+.fluid-glass-btn:hover {
+  background: radial-gradient(135% 135% at 20% 20%, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+@keyframes telemetry-pulse-radar {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.85;
+  }
+  60% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+.telemetry-radar-ping {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: telemetry-pulse-radar 2.2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  pointer-events: none;
 }
 
 .badge {

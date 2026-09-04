@@ -7,7 +7,7 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { useStoreState, subscribe, store } from '../store';
+import { useStoreState, subscribe, store, scrollRef } from '../store';
 import SpectraLogo from './branding/SpectraLogo';
 import { LoginGate } from './auth/LoginGate';
 
@@ -19,9 +19,9 @@ const NAV_LINKS = [
   { label: 'Telemetry', href: '#predictive' },
 ] as const;
 
-type EnvMode = 'day' | 'sunset' | 'storm' | 'night' | 'recovery' | 'orange';
+export type EnvMode = 'day' | 'sunset' | 'storm' | 'night' | 'recovery' | 'orange';
 
-function getEnvMode(stage: number, progress: number): EnvMode {
+export function getEnvMode(stage: number, progress: number): EnvMode {
   if (stage === 5 || progress > 0.88) return 'orange';
   if (stage === 4) return 'storm';
   if (stage === 3) return 'recovery';
@@ -30,7 +30,7 @@ function getEnvMode(stage: number, progress: number): EnvMode {
   return 'day';
 }
 
-const ENV_PALETTE: Record<
+export const ENV_PALETTE: Record<
   EnvMode,
   { accent: string; accentRgb: string; glow: string; edge: string; glass: string }
 > = {
@@ -172,8 +172,8 @@ function SwarmLabel({
 /* ─── Main Navbar ─── */
 
 export default function Navbar({ onCommandCenter }: { onCommandCenter?: () => void }) {
-  const { stage, scrollProgress } = useStoreState();
-  const envMode = getEnvMode(stage, scrollProgress);
+  const { stage } = useStoreState();
+  const envMode = getEnvMode(stage, scrollRef.value);
   const palette = ENV_PALETTE[envMode];
 
   const navRef = useRef<HTMLElement>(null);
@@ -262,8 +262,8 @@ export default function Navbar({ onCommandCenter }: { onCommandCenter?: () => vo
     window.addEventListener('resize', scheduleResolve);
 
     const unsub = subscribe(() => {
-      if (store.scrollProgress === lastScroll) return;
-      lastScroll = store.scrollProgress;
+      if (scrollRef.value === lastScroll) return;
+      lastScroll = scrollRef.value;
       scheduleResolve();
     });
 

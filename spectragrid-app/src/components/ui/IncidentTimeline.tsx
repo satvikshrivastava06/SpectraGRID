@@ -67,7 +67,7 @@ export default function IncidentTimeline() {
                                     trigger: 'incident',
                                     assetId: 'Inverter 02',
                                     what: 'Thermal degradation alert INC-204 active. Internal temp exceeded 72°C.',
-                                    why: 'Aged heat sink capacitors and cooling fan failure. SHAP registers -34% fan speed decay.',
+                                    why: 'Aged heat sink capacitors and cooling fan failure. -34% fan speed decay.',
                                     whatNext: 'Probability of grid failure within 24 hours: 74% if unmitigated.',
                                     action: 'Deploy crew to clean fan filter and replace filter capacitor immediately.',
                                     doNothing: 'Capacitor burn out cost: ₹18.5k (repair) + ₹50k (lost yield) + 3.4 tCO₂e Scope 2 liability.',

@@ -245,7 +245,7 @@ export default function DigitalTwinUI() {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                     <div>
-                        <div className="section-eyebrow">// Asset Twin Control</div>
+                        <div className="section-eyebrow">Asset Twin Control</div>
                         <h2 className="section-title" style={{ margin: 0 }}>SpectraTwin Dashboard</h2>
                     </div>
 
@@ -322,7 +322,7 @@ export default function DigitalTwinUI() {
                                 <span style={{ fontSize: '0.8rem', color: '#FFF' }}>
                                     {activeAsset.healthy === false
                                         ? 'CRITICAL EXCURSION: Secondary losses detected under underperforming cell. Please audit String 4 panel B12.'
-                                        : 'System stabilized. Physics calibration matches pvlib tracking variables within 1.2% variance limits.'}
+                                        : 'System stabilized. Physics calibration matches expected-output model within 1.2% variance limits.'}
                                 </span>
                             </div>
                         </div>

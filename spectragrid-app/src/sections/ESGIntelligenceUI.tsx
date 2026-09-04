@@ -72,7 +72,7 @@ export default function ESGIntelligenceUI() {
 
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-                    <div className="section-eyebrow">// Carbon Integrity Ledger</div>
+                    <div className="section-eyebrow">Carbon Integrity Ledger</div>
                     <h2 className="section-title">Climate Impact Intelligence</h2>
                     <p className="section-subtitle" style={{ margin: '0 auto', maxWidth: '600px' }}>
                         Auditable digital MRV calculations, SDG alignment tracking, and ecosystem-level impact reporting aligned with global standards.

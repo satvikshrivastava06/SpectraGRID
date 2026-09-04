@@ -16,7 +16,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[os.environ.get("NODE_SERVICE_ORIGIN", "http://localhost:3001")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -93,4 +93,4 @@ def api_explain_anomaly(payload: Dict[str, Any]):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=(os.environ.get("ENV") != "production"))

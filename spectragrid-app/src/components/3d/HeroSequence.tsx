@@ -1,7 +1,7 @@
 import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { store } from '../../store';
+import { scrollRef } from '../../store';
 
 const PARTICLE_COUNT = 15000;
 
@@ -127,7 +127,7 @@ export default function HeroSequence() {
             material.uniforms.uTime.value = state.clock.elapsedTime;
             material.uniforms.uProgress.value = THREE.MathUtils.lerp(
                 material.uniforms.uProgress.value,
-                store.scrollProgress,
+                scrollRef.value,
                 0.05
             );
         }

@@ -2,7 +2,7 @@ export default function EnergyFlowUI() {
     return (
         <section id="energy-flow" className="section">
             <div className="section-inner">
-                <div className="section-eyebrow">// Integrated IoT Telemetry</div>
+                <div className="section-eyebrow">Integrated IoT Telemetry</div>
                 <h2 className="section-title">Telemetry Flow Topology</h2>
                 <p className="section-subtitle">
                     Real-time updates from panel arrays and building grids flow continuously through our edge anomaly pipeline.

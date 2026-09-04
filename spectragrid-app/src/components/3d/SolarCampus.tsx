@@ -1,7 +1,7 @@
 import { useRef, useLayoutEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { store } from '../../store';
+import { store, scrollRef } from '../../store';
 
 export default function SolarCampus() {
     const meshRef = useRef<THREE.InstancedMesh>(null);
@@ -38,7 +38,7 @@ export default function SolarCampus() {
     useFrame((state) => {
         if (!meshRef.current) return;
 
-        const p = store.scrollProgress;
+        const p = scrollRef.value;
         const activeNode = store.activeNode;
 
         let i = 0;

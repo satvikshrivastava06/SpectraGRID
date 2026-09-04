@@ -53,7 +53,6 @@ console.log(`[DATABASE] Success. Loaded ${db.users.length} users, ${db.campuses.
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
 
 // Health check

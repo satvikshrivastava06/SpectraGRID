@@ -1,91 +1,42 @@
 import { Router, Request, Response } from 'express';
-import { getDb, saveDb, writeAuditLog } from '../db';
+import {
+    getOrganization, getFullHierarchy, getLatestTelemetry, getTelemetryLog,
+    findCampusById, findBuildingById, getRecommendations, updateAlertStatus,
+    getActiveContext, setActiveContext, writeAuditLog
+} from '../db';
 import { processTelemetryIngestion, TelemetryData } from '../eventEngine';
-import { requireAuth, requireRole } from '../middleware/auth';
+import { requireAuth, requireRole, AuthenticatedRequest } from '../middleware/auth';
 import { validateBody, TelemetryIngestSchema, SimulateScenarioSchema, UpdateAlertSchema } from '../middleware/validation';
 
 const router = Router();
-
-// All /api/* routes require authentication
 router.use(requireAuth as any);
 
-// GET /api/campuses (reads the full hierarchy: Organization -> Campus -> Building -> Rooftop -> Array -> String -> Panel, plus Inverters & Batteries)
-router.get('/campuses', (req: Request, res: Response) => {
-    const db = getDb();
-
-    const clientCampuses = (db.campuses || []).map(camp => {
-        const campusBatteries = (db.batteries || []).filter(b => b.campusId === camp.id || b.buildingId === undefined);
-        const buildings = (db.buildings || [])
-            .filter(bld => bld.campusId === camp.id)
-            .map(bld => {
-                const inverters = (db.inverters || []).filter(inv => inv.buildingId === bld.id);
-                const rooftops = (db.rooftops || [])
-                    .filter(r => r.buildingId === bld.id)
-                    .map(roof => {
-                        const arrays = (db.arrays || [])
-                            .filter(arr => arr.rooftopId === roof.id || arr.buildingId === bld.id)
-                            .map(arr => {
-                                const strings = (db.strings || [])
-                                    .filter(s => s.arrayId === arr.id)
-                                    .map(strItem => {
-                                        const panels = (db.panels || []).filter(p => p.stringId === strItem.id || p.inverterId === inverters[0]?.id);
-                                        return { ...strItem, panels };
-                                    });
-                                return { ...arr, strings };
-                            });
-                        return { ...roof, arrays };
-                    });
-                return {
-                    ...bld,
-                    rooftops,
-                    inverters,
-                    batteries: (db.batteries || []).filter(b => b.buildingId === bld.id)
-                };
-            });
-        return {
-            ...camp,
-            batteries: campusBatteries,
-            buildings
-        };
-    });
-
-    return res.json({
-        organization: db.organizations[0],
-        campuses: clientCampuses
-    });
+router.get('/campuses', async (req: Request, res: Response) => {
+    const [organization, campuses] = await Promise.all([getOrganization(), getFullHierarchy()]);
+    return res.json({ organization, campuses });
 });
 
-// GET /api/telemetry
-router.get('/telemetry', (req: Request, res: Response) => {
-    const db = getDb();
-    return res.json(db.telemetry);
+router.get('/telemetry', async (req: Request, res: Response) => {
+    return res.json(await getLatestTelemetry());
 });
 
-// POST /api/telemetry-ingest (handles ingestion & hooks into AI / anomaly alerts engine)
 router.post('/telemetry-ingest', validateBody(TelemetryIngestSchema), async (req: Request, res: Response) => {
     const telemetry: TelemetryData = req.body;
     await processTelemetryIngestion(telemetry);
-
-    const db = getDb();
-    return res.json({
-        status: 'success',
-        telemetry: db.telemetry,
-        activeContext: db.activeContext
-    });
+    const [telemetryNow, activeContext] = await Promise.all([getLatestTelemetry(), getActiveContext()]);
+    return res.json({ status: 'success', telemetry: telemetryNow, activeContext });
 });
 
-// GET /api/ghost-generation (calculates metrics over dates via pvlib ml-service)
 router.get('/ghost-generation', async (req: Request, res: Response) => {
     const { campusId, rooftopId, days } = req.query;
-    const db = getDb();
-
-    const camp = db.campuses.find(c => c.id === campusId || c.name === campusId) || db.campuses[0];
-    const roof = db.buildings.find(b => b.id === rooftopId || b.name === rooftopId) || db.buildings[0];
+    const camp = await findCampusById(campusId as string);
+    const roof = await findBuildingById(rooftopId as string);
     const numDays = parseInt(days as string) || 30;
 
-    const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+    const mlServiceUrl = process.env.ML_SERVICE_URL
+        ? `https://${process.env.ML_SERVICE_URL}`
+        : 'http://localhost:8000';
 
-    // Construct asset config with dynamic location support (latitude & longitude)
     const assetConfig = {
         asset_id: roof.id || 'roof-1',
         latitude: camp.lat || 23.18,
@@ -97,20 +48,16 @@ router.get('/ghost-generation', async (req: Request, res: Response) => {
         inverter_efficiency: 0.96
     };
 
-    // Generate weather window samples for requested days (4 samples per hour)
     const totalHours = numDays * 24;
-    const sampleCount = totalHours * 4; // 15-min intervals
+    const sampleCount = totalHours * 4;
     const weatherWindow = Array.from({ length: sampleCount }).map((_, idx) => {
         const hourOfDay = (idx * 0.25) % 24;
         const isDaytime = hourOfDay >= 6 && hourOfDay <= 18;
         const sunAngle = isDaytime ? Math.sin((hourOfDay - 6) * Math.PI / 12) : 0;
         const ghi = isDaytime ? Math.floor(sunAngle * 950) : 0;
         return {
-            ghi,
-            dni: Math.floor(ghi * 0.75),
-            dhi: Math.floor(ghi * 0.25),
-            temp_air: 28.0 + (isDaytime ? sunAngle * 7 : -3),
-            wind_speed: 2.5
+            ghi, dni: Math.floor(ghi * 0.75), dhi: Math.floor(ghi * 0.25),
+            temp_air: 28.0 + (isDaytime ? sunAngle * 7 : -3), wind_speed: 2.5
         };
     });
 
@@ -119,28 +66,20 @@ router.get('/ghost-generation', async (req: Request, res: Response) => {
         const response = await fetch(`${mlServiceUrl}/physics/expected-power`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                asset_config: assetConfig,
-                weather_window: weatherWindow
-            })
+            body: JSON.stringify({ asset_config: assetConfig, weather_window: weatherWindow })
         });
-
         if (response.ok) {
             const data: any = await response.json();
             expected = Math.floor(data.total_expected_kwh || 0);
         } else {
-            console.warn('[PHYSICS] ML service response not OK, fallback physics calculation');
             expected = Math.floor(assetConfig.capacity_kwp * 4.0 * numDays * 0.95);
         }
     } catch (err) {
-        console.warn('[PHYSICS] Could not connect to ML service at', mlServiceUrl);
         expected = Math.floor(assetConfig.capacity_kwp * 4.0 * numDays * 0.95);
     }
 
-    // Telemetry log actual power aggregation
-    const loggedHistory = db.telemetryLog || [];
-    const loggedRecordsCount = loggedHistory.length;
-    const dataCompletenessPct = Number(Math.min(100, (loggedRecordsCount / Math.max(1, sampleCount)) * 100).toFixed(1));
+    const loggedHistory = await getTelemetryLog();
+    const dataCompletenessPct = Number(Math.min(100, (loggedHistory.length / Math.max(1, sampleCount)) * 100).toFixed(1));
 
     const efficiencyDrop = roof.efficiencyDrop || 0.12;
     const actual = Math.floor(expected * (1 - efficiencyDrop));
@@ -149,44 +88,64 @@ router.get('/ghost-generation', async (req: Request, res: Response) => {
     const carbon = Number(((ghost * 0.71) / 1000).toFixed(2));
     const pr = expected > 0 ? Number(((actual / expected) * 100).toFixed(1)) : 82.5;
 
-    return res.json({
-        expected,
-        actual,
-        ghost,
-        revenue,
-        carbon,
-        pr,
-        dataCompletenessPct
-    });
+    return res.json({ expected, actual, ghost, revenue, carbon, pr, dataCompletenessPct });
 });
 
-// GET /api/forecast (AI weather & production curves)
-router.get('/forecast', (req: Request, res: Response) => {
-    const db = getDb();
-    // Simulate 7-day weather & generation forecasting
-    const forecast = Array.from({ length: 7 }).map((_, idx) => {
-        const date = new Date();
-        date.setDate(date.getDate() + idx);
-        const dateString = date.toISOString().split('T')[0];
+// Real 7-day weather forecast from Open-Meteo (Task A)
+router.get('/forecast', async (req: Request, res: Response) => {
+    const camp = await findCampusById();
+    const lat = camp?.lat || 23.18;
+    const lng = camp?.lng || 79.98;
+    const capacityKwp = camp?.size || 138;
 
-        const conditions = ['sunny', 'mostly_sunny', 'cloudy', 'rainy', 'monsoon'][idx % 5];
-        const avgIrradiance = conditions === 'sunny' ? 880 : conditions === 'mostly_sunny' ? 760 : conditions === 'cloudy' ? 410 : 250;
-        const predictedKwVal = (avgIrradiance / 1000) * 138;
+    const mapWeatherCode = (code: number): string => {
+        if (code === 0) return 'sunny';
+        if (code <= 2) return 'mostly_sunny';
+        if (code <= 48) return 'cloudy';
+        if (code <= 67 || (code >= 80 && code <= 82)) return 'rainy';
+        return 'monsoon';
+    };
 
-        return {
-            date: dateString,
-            conditions,
-            predictedProduction: Math.floor(predictedKwVal),
-            expectedRevenue: Math.floor(predictedKwVal * 7.8),
-            carbonOffset: Number(((predictedKwVal * 0.71) / 1000).toFixed(2))
-        };
-    });
+    try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weathercode,shortwave_radiation_sum,precipitation_probability_max&timezone=Asia%2FKolkata&forecast_days=7`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Open-Meteo request failed');
+        const data: any = await response.json();
 
-    return res.json(forecast);
+        const forecast = data.daily.time.map((dateString: string, idx: number) => {
+            const radiationMJ = data.daily.shortwave_radiation_sum[idx] || 0;
+            const avgIrradiance = (radiationMJ * 1_000_000) / (24 * 3600); // MJ/m² → avg W/m²
+            const predictedKwVal = (avgIrradiance / 1000) * capacityKwp;
+            return {
+                date: dateString,
+                conditions: mapWeatherCode(data.daily.weathercode[idx]),
+                predictedProduction: Math.floor(predictedKwVal),
+                expectedRevenue: Math.floor(predictedKwVal * 7.8),
+                carbonOffset: Number(((predictedKwVal * 0.71) / 1000).toFixed(2)),
+                rainProbability: data.daily.precipitation_probability_max[idx]
+            };
+        });
+
+        return res.json(forecast);
+    } catch (err) {
+        console.warn('[FORECAST] Open-Meteo unreachable, using fallback estimate');
+        const forecast = Array.from({ length: 7 }).map((_, idx) => {
+            const date = new Date();
+            date.setDate(date.getDate() + idx);
+            const predictedKwVal = capacityKwp * 0.6;
+            return {
+                date: date.toISOString().split('T')[0],
+                conditions: 'unknown',
+                predictedProduction: Math.floor(predictedKwVal),
+                expectedRevenue: Math.floor(predictedKwVal * 7.8),
+                carbonOffset: Number(((predictedKwVal * 0.71) / 1000).toFixed(2))
+            };
+        });
+        return res.json(forecast);
+    }
 });
 
-// POST /api/simulate (scenario analysis triggers — Operator+ only)
-router.post('/simulate', requireRole('Operator', 'Administrator', 'Manager') as any, validateBody(SimulateScenarioSchema), (req: Request, res: Response) => {
+router.post('/simulate', requireRole('Operator', 'Administrator', 'Manager') as any, validateBody(SimulateScenarioSchema), async (req: Request, res: Response) => {
     const { inverterFailure, dustAccumulation, batteryDegradation, delayedMaintenance, monsoonEvent, cloudCover } = req.body;
 
     const baseOutput = 138;
@@ -198,10 +157,7 @@ router.post('/simulate', requireRole('Operator', 'Administrator', 'Manager') as 
     deficit += monsoonEvent ? 22 : 0;
 
     const maintenanceMultiplier =
-        delayedMaintenance === '3m' ? 0.18
-            : delayedMaintenance === '1m' ? 0.10
-                : delayedMaintenance === '1w' ? 0.04
-                    : 0;
+        delayedMaintenance === '3m' ? 0.18 : delayedMaintenance === '1m' ? 0.10 : delayedMaintenance === '1w' ? 0.04 : 0;
 
     deficit += baseOutput * maintenanceMultiplier;
     const energyLost = Math.min(baseOutput, Math.floor(deficit));
@@ -210,9 +166,6 @@ router.post('/simulate', requireRole('Operator', 'Administrator', 'Manager') as 
     const carbonLost = Number(((energyLost * 0.71) / 1000).toFixed(3));
     const esgScore = Math.max(10, Math.floor(92 - (energyLost * 0.4)));
 
-    const db = getDb();
-
-    // Calculate decision context shape based on simulated scenario
     const scenarioContext = {
         trigger: 'scenario-api',
         assetId: 'Scenario Simulator',
@@ -227,40 +180,23 @@ router.post('/simulate', requireRole('Operator', 'Administrator', 'Manager') as 
         severity: energyLost > 50 ? 'critical' : energyLost > 20 ? 'warning' : ('info' as any)
     };
 
-    db.activeContext = scenarioContext;
-    saveDb(db);
+    await setActiveContext(scenarioContext);
 
-    return res.json({
-        energyLost,
-        actual,
-        revenueLoss,
-        carbonLost,
-        esgScore,
-        activeContext: scenarioContext
-    });
+    return res.json({ energyLost, actual, revenueLoss, carbonLost, esgScore, activeContext: scenarioContext });
 });
 
-// GET /api/recommendations (pull queue)
-router.get('/recommendations', (req: Request, res: Response) => {
-    const db = getDb();
-    return res.json(db.recommendations);
+router.get('/recommendations', async (req: Request, res: Response) => {
+    return res.json(await getRecommendations());
 });
 
-// POST /api/alerts (creates or resolves alerts)
-router.post('/alerts', validateBody(UpdateAlertSchema), (req: Request, res: Response) => {
+router.post('/alerts', requireRole('Operator', 'Administrator', 'Manager') as any, validateBody(UpdateAlertSchema), async (req: AuthenticatedRequest, res: Response) => {
     const { alertId, status } = req.body;
-    const db = getDb();
-
-    const alertIndex = db.alerts.findIndex(a => a.id === alertId);
-    if (alertIndex === -1) {
+    const updatedAlert = await updateAlertStatus(alertId, status);
+    if (!updatedAlert) {
         return res.status(404).json({ error: 'Alert not found' });
     }
-
-    db.alerts[alertIndex].status = status;
-    writeAuditLog('operator-1', 'ALERT_UPDATE', `Alert ${alertId} updated to ${status}`);
-    saveDb(db);
-
-    return res.json(db.alerts[alertIndex]);
+    await writeAuditLog(req.user!.id, 'ALERT_UPDATE', `Alert ${alertId} updated to ${status}`);
+    return res.json(updatedAlert);
 });
 
 export default router;

@@ -10,7 +10,11 @@ export interface AuthenticatedRequest extends Request {
     };
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'spectragrid_antigravity_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is required and must not have a default.');
+}
+const secret: string = JWT_SECRET;
 
 export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     // 1. Check Authorization Header
@@ -27,7 +31,7 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        const decoded = jwt.verify(token, secret) as any;
         req.user = decoded;
         next();
     } catch (err) {

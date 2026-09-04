@@ -1,22 +1,24 @@
 # ⚡ SpectraGRID — Autonomous Solar & Energy Asset Intelligence Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
+[![CI](https://github.com/satvikshrivastava06/SpectraGRID/actions/workflows/ci.yml/badge.svg)](https://github.com/satvikshrivastava06/SpectraGRID/actions/workflows/ci.yml)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-7.0-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
-[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL_15-FDB813?logo=postgresql&logoColor=white)](https://www.timescale.com/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
-SpectraGRID is an enterprise-grade, full-stack autonomous decision engine and digital twin platform for utility-scale and commercial/industrial solar energy infrastructure. It merges physical solar modeling (`pvlib`), real-time weather integration (NASA POWER API), machine-learning fault detection (IsolationForest & RandomForest), Shapley-value explainable AI attributions, and immersive 3D telemetry visualization.
+SpectraGRID is a full-stack decision-intelligence platform for solar energy infrastructure. It merges physical solar modeling (`pvlib`), live weather data, machine-learning fault detection with explainable attribution, and a cost/carbon-aware recommendation engine behind an interactive 3D digital twin.
+
+> **The core idea — Ghost Generation.** Most monitoring dashboards can tell you an inverter is online. They can't tell you it's *underperforming*. SpectraGRID computes what a solar array *should* have produced from physics and live weather, compares it against what it actually produced, and treats the gap — Ghost Generation — as the platform's primary metric: attributed to a cause, priced in ₹ and kg CO₂, and paired with a costed recommendation.
 
 ---
 
 ## 🌟 Key Features
 
-- **🌐 Digital Twin Command Center**: Interactive 3D physical modeling of solar arrays, inverters, and grid infrastructure powered by Three.js & React Three Fiber.
-- **⚡ Ghost Replay™ & Expected Generation**: Real-time comparison of expected vs. actual energy yield using `pvlib` physics calculations driven by live weather telemetry.
-- **🧠 Explainable AI (XAI) Attribution**: SHAP (Shapley Additive exPlanations) attribution panels explaining root causes for energy anomalies (inverter clipping, panel degradation, shading, thermal loss).
+- **🌐 Digital Twin Command Center** — Interactive 3D modeling of solar arrays, inverters, and grid infrastructure, built on Three.js & React Three Fiber.
+- **⚡ Ghost Generation Engine** — Physics-based expected yield (`pvlib`) compared against actual output in real time, converted into a ₹ revenue-loss and kg-CO₂ figure.
+- **🧠 Explainable Fault Attribution** — An IsolationForest anomaly model with a SHAP explainer attributes energy loss to a root cause (soiling, thermal derating, inverter fault, grid instability). If the ML service is ever unreachable, the pipeline **falls back to a threshold heuristic automatically** and labels its own output honestly — the UI tells you which one actually ran.
+- **🎯 Dynamic ROI Decision Gate** — Not just an alert: for deferrable faults (like soiling), the system pulls a live rain forecast and compares the cost of acting now against the cost of waiting for a natural wash. Positive-ROI actions are auto-ticketed; the reasoning behind every decision is shown, not just the outcome.
 - **📊 6-Stage Telemetry Stream**:
   1. *Ghost Generation Engine* — Real-time yield expectation & gap detection
   2. *Twin Dashboard* — Asset hierarchy overview & live metrics
@@ -24,41 +26,40 @@ SpectraGRID is an enterprise-grade, full-stack autonomous decision engine and di
   4. *Climate Impact Intelligence* — Environmental factor decomposition & weather correlations
   5. *Infrastructure Observability* — Deep diagnostics & active alert monitoring
   6. *Deploy Twin Instance* — Rapid deployment & configuration HUD
-- **🛡️ Enterprise Security & RBAC**: JWT authentication with Role-Based Access Control (`Operator`, `Administrator`, `Manager`, `Auditor`), Zod request validation, rate limiting, and Helmet security header hardening.
-- **⏱️ Time-Series Data Layer**: TimescaleDB hypertable integration on PostgreSQL 15 managed via Prisma ORM v7.
+- **🛡️ Security & RBAC** — bcrypt-only password hashing (no legacy fallback path), JWT auth over httpOnly cookies, four-role RBAC (`Operator`, `Administrator`, `Manager`, `Auditor` — the last is enforced read-only, including on state-mutating routes), Zod request validation, rate limiting, and Helmet header hardening.
+- **⏱️ Time-Series Data Layer** — A single-writer JSON file store behind a stable async data-access seam, chosen for prototype simplicity. A Prisma schema and TimescaleDB hypertable strategy are fully designed and mid-migration — see [Roadmap](#-roadmap).
 
 ---
 
 ## 🏗️ System Architecture
 
 ```
-                                  ┌───────────────────────────────┐
-                                  │      React 19 Frontend        │
-                                  │ (Vite, Three.js, Tailwind,    │
-                                  │  GSAP, Framer Motion, Lenis)  │
-                                  └───────────────┬───────────────┘
-                                                  │ REST APIs / JWT
-                                                  ▼
-                                  ┌───────────────────────────────┐
-                                  │   Node.js / Express Server    │
-                                  │ (TypeScript, Zod, Helmet,     │
-                                  │   Prisma ORM v7, Auth/RBAC)   │
-                                  └──────┬─────────────────┬──────┘
-                                         │                 │
-                      Internal Proxy / REST               Database Queries
-                                         │                 │
-                                         ▼                 ▼
-  ┌────────────────────────────────────────┐     ┌────────────────────────────────┐
-  │      Python ML & Physics Service       │     │     TimescaleDB / PostgreSQL   │
-  │ (FastAPI, pvlib, scikit-learn, SHAP)   │     │ (Asset Hierarchy & Time-Series │
-  └──────────────────┬─────────────────────┘     │         Telemetry Data)        │
-                     │                           └────────────────────────────────┘
-                     ▼
-  ┌────────────────────────────────────────┐
-  │            NASA POWER API              │
-  │   (Global Meteorological Telemetry)    │
-  └────────────────────────────────────────┘
+                          ┌────────────────────────────────┐
+                          │        React 19 Frontend        │
+                          │  (Vite, Three.js, Tailwind,     │
+                          │   GSAP, Framer Motion, Lenis)   │
+                          └────────────────┬─────────────────┘
+                                           │ REST APIs / JWT (httpOnly cookie)
+                                           ▼
+                          ┌────────────────────────────────┐
+                          │    Node.js / Express Server     │
+                          │  (TypeScript, Zod, Helmet,      │
+                          │      Auth / RBAC)               │
+                          └──┬──────────────┬─────────┬─────┘
+                             │              │         │
+                  Internal proxy   Open-Meteo API   JSON file
+                   (anomaly /            │           store
+                  physics calls)         ▼
+                             │   (live 7-day forecast
+                             ▼      + rain probability
+      ┌────────────────────────────┐  for the ROI gate)
+      │  Python ML & Physics       │
+      │  Service (FastAPI, pvlib,  │
+      │  scikit-learn, SHAP)       │
+      └─────────────────────────────┘
 ```
+
+The physics/anomaly path and the forecast path are intentionally separate: `/api/forecast` calls Open-Meteo directly for a real 7-day outlook, while the ghost-generation physics engine currently runs on a generated irradiance curve rather than live satellite data — that gap is tracked honestly below, not papered over in the diagram.
 
 ---
 
@@ -68,9 +69,11 @@ SpectraGRID is an enterprise-grade, full-stack autonomous decision engine and di
 |---|---|
 | **Frontend** | React 19, TypeScript, Vite, Three.js / React Three Fiber, GSAP, Framer Motion, Lenis Scroll, Lucide React, Tailwind CSS |
 | **Backend API** | Node.js, Express, TypeScript, Zod, Express Rate Limit, Helmet, JSON Web Tokens (JWT), bcryptjs |
-| **ML & Physics** | Python 3.11+, FastAPI, `pvlib`, `scikit-learn` (IsolationForest, RandomForest), `shap`, `pandas`, `numpy` |
-| **Database** | PostgreSQL 15, TimescaleDB Hypertables, Prisma ORM v7 |
-| **Infrastructure** | Docker, Docker Compose |
+| **ML & Physics** | Python 3.11+, FastAPI, `pvlib`, `scikit-learn` (IsolationForest), `shap`, `pandas`, `numpy` |
+| **Weather** | Open-Meteo (live, no API key required) |
+| **Database** | Local JSON File Store (prototype), Prisma schema + TimescaleDB hypertable defined, migration in progress |
+| **CI** | GitHub Actions — build, lint, and test on every push (frontend, backend, ML service) |
+| **Infrastructure** | Docker, Docker Compose, deployed via Render (API + ML service) and Netlify (frontend) |
 
 ---
 
@@ -85,7 +88,7 @@ VITE_API_BASE_URL=http://localhost:3001
 ```env
 PORT=3001
 ML_SERVICE_URL=http://localhost:8000
-JWT_SECRET=spectragrid_antigravity_secret_key_2026
+JWT_SECRET= # generate with: openssl rand -hex 32
 DATABASE_URL=postgresql://spectragrid:spectragrid@localhost:5432/spectragrid_db
 ```
 
@@ -100,98 +103,82 @@ DATABASE_URL=postgresql://spectragrid:spectragrid@localhost:5432/spectragrid_db
 
 ---
 
-### Step 1: Database Setup (TimescaleDB & Prisma)
+### Step 1: Start Python ML & Physics Service
 ```bash
-# Start TimescaleDB container
-docker-compose up timescaledb -d
-
-# Navigate to server directory
-cd spectragrid-app/server
-
-# Run Prisma schema migrations
-npm run db:migrate
-
-# Apply TimescaleDB hypertable setup
-psql postgresql://spectragrid:spectragrid@localhost:5432/spectragrid_db \
-  -f prisma/migrations/timescaledb_hypertables.sql
-
-# Seed initial database assets & user accounts
-npm run db:seed
-```
-
----
-
-### Step 2: Start Python ML & Physics Service
-```bash
-# Navigate to ML service directory
 cd spectragrid-app/server/ml-service
-
-# Install Python dependencies
 pip install -r requirements.txt
-
-# Train baseline ML models (run once)
-python models/train_models.py
-
-# Start FastAPI server
+python models/train_models.py   # trains baseline models once
 python main.py
 ```
-*Service will be running on [http://localhost:8000](http://localhost:8000)*
+*Service runs on [http://localhost:8000](http://localhost:8000)*
 
 ---
 
-### Step 3: Start Node/Express Server
+### Step 2: Start Node/Express Server
 ```bash
-# Navigate to server directory
 cd spectragrid-app/server
-
-# Install dependencies
 npm install
-
-# Start Express server in dev mode
 npm run dev
 ```
-*API Server will be running on [http://localhost:3001](http://localhost:3001)*
+*API server runs on [http://localhost:3001](http://localhost:3001)*
 
 ---
 
-### Step 4: Start Frontend Application
+### Step 3: Start Frontend Application
 ```bash
-# Navigate to frontend root
 cd spectragrid-app
-
-# Install dependencies
 npm install
-
-# Start Vite dev server
 npm run dev
 ```
-*Frontend application will be accessible at [http://localhost:5173](http://localhost:5173)*
+*Frontend runs on [http://localhost:5173](http://localhost:5173)*
+
+---
+
+### In progress: Postgres migration
+```bash
+docker-compose up timescaledb -d
+cd spectragrid-app/server
+npx prisma migrate dev --name init
+psql postgresql://spectragrid:spectragrid@localhost:5432/spectragrid_db \
+  -f prisma/migrations/timescaledb_hypertables.sql
+npm run db:seed
+```
+The data-access layer is already behind a stable function seam (`src/db.ts`), so this migration converts one function at a time without touching route logic — see [Roadmap](#-roadmap) for current progress.
 
 ---
 
 ## 🐳 Docker Compose (One-Command Full Stack)
 
-To build and run all services (TimescaleDB, ML Service, Node Server, and React Frontend) together:
-
 ```bash
 docker-compose up --build
 ```
 
-Services will initialize in dependency order:
-`timescaledb` ➔ `ml-service` + `server` ➔ `spectragrid-app`
+Services initialize in dependency order: `timescaledb` ➔ `ml-service` + `server` ➔ `spectragrid-app`
+
+---
+
+## 🧪 Testing & CI
+
+Every push and pull request against `main` runs three parallel jobs:
+
+| Job | Checks |
+|---|---|
+| **Backend** | TypeScript build, then targeted tests covering auth (no bypass on non-bcrypt paths), RBAC enforcement on `/api/alerts`, audit-log identity correctness, and the ML-service fallback path |
+| **Frontend** | Lint (`oxlint`) + production build |
+| **ML Service** | `pytest` against the physics engine (`pvlib` expected-output calculations) |
 
 ---
 
 ## 🔐 Authentication & Pre-configured Accounts
 
-Authentication uses JWT Bearer Tokens. Standard test accounts pre-seeded in the system (password: `password123`):
+JWT-based auth over an httpOnly cookie. Standard test accounts pre-seeded in the system (password: `password123`):
 
 | Email | Role | Access Privileges |
 |---|---|---|
 | `ops@spectragrid.ai` | `Operator` | Live telemetry access, scenario stress simulation |
 | `admin@spectragrid.ai` | `Administrator` | Full system control, user management, configuration |
 | `exec@spectragrid.ai` | `Manager` | Executive dashboards, financial metrics, export |
-| `auditor@esg.org` | `Auditor` | Read-only compliance audit & telemetry logs |
+| `auditor@esg.org` | `Auditor` | Read-only — enforced at the route level, not just the UI |
 
 ---
 
@@ -204,11 +191,32 @@ Authentication uses JWT Bearer Tokens. Standard test accounts pre-seeded in the 
 | `/api/auth/me` | `GET` | Authenticated | Retrieves current authenticated profile |
 | `/api/campuses` | `GET` | Authenticated | Fetches full asset hierarchy tree |
 | `/api/telemetry` | `GET` | Authenticated | Real-time telemetry feed snapshot |
-| `/api/telemetry-ingest` | `POST` | Authenticated | Ingests telemetry & executes ML pipeline |
-| `/api/ghost-generation` | `GET` | Authenticated | Expected physics yield vs actual energy |
+| `/api/telemetry-ingest` | `POST` | Authenticated | Ingests telemetry & executes the anomaly/ROI pipeline |
+| `/api/ghost-generation` | `GET` | Authenticated | Expected physics yield vs. actual energy |
+| `/api/forecast` | `GET` | Authenticated | Live 7-day weather & production forecast (Open-Meteo) |
 | `/api/simulate` | `POST` | Operator+ | Runs "What If?" stress scenarios |
-| `/api/recommendations` | `GET` | Authenticated | Generates AI decision recommendations |
-| `/api/alerts` | `POST` | Authenticated | Acknowledges or resolves asset alerts |
+| `/api/recommendations` | `GET` | Authenticated | AI-generated, ROI-gated decision recommendations |
+| `/api/alerts` | `POST` | Operator+ | Acknowledges or resolves asset alerts (Auditor role is read-only here by design) |
+
+---
+
+## 🚧 Known Limitations
+
+Documented deliberately, not discovered by a reviewer:
+
+- **Mocked Data Layer**: TimescaleDB and Prisma are fully schema-designed but not yet the live data path — see [Roadmap](#-roadmap) for migration status.
+- **Single-Tenant Structure**: The system operates on a single-tenant design by choice; a multi-tenant hierarchy isn't built because nothing in this prototype yet needs one.
+- **Synthetic Model Training**: The anomaly model and SHAP explainer are trained on synthetic seed data, not real historical fleet telemetry.
+- **Simulated Ghost-Generation Weather**: The physics engine's expected-yield calculation currently runs on a generated irradiance curve rather than live satellite/weather data — `/api/forecast` is the one endpoint on real weather today.
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Convert remaining `db.ts` functions from the JSON store to Prisma (auth pair converted first; asset hierarchy and telemetry next)
+- [ ] Provision and migrate to a live Postgres + TimescaleDB instance in production
+- [ ] Replace synthetic ML training data with a real public solar telemetry dataset
+- [ ] Wire live weather into the ghost-generation physics path, not just the forecast panel
 
 ---
 

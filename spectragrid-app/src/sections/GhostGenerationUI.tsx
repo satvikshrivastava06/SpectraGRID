@@ -102,7 +102,7 @@ export default function GhostGenerationUI() {
         <section id="ghost-generation" className="section">
             <div className="section-inner">
                 <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-                    <div className="section-eyebrow">// Diagnosis Core</div>
+                    <div className="section-eyebrow">Diagnosis Core</div>
                     <h2 className="section-title">Ghost Generation Analysis Engine</h2>
                     <p className="section-subtitle" style={{ margin: '0 auto' }}>
                         Interactive analytical simulator testing expected solar yields against live physical losses.
@@ -221,10 +221,10 @@ export default function GhostGenerationUI() {
                 {/* Grid Layer for Breakdown */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '40px' }}>
 
-                    {/* Static SHAP Attribution Metering */}
+                    {/* Static Attribution Metering */}
                     <div className="glass-panel" style={{ padding: '40px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div className="mono" style={{ textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.9rem', color: 'var(--color-red)' }}>
-              // SHAP Root-Cause Attribution Summary
+              // Root-Cause Attribution Summary
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (build + test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spectragrid-app/server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: spectragrid-app/server/package-lock.json
+      - run: npm install --include=dev
+      - run: npm run build
+      - run: npm test
+        env:
+          JWT_SECRET: ci-test-secret-not-for-production
+
+  frontend:
+    name: Frontend (lint + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spectragrid-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: spectragrid-app/package-lock.json
+      - run: npm install
+      - run: npm run lint
+      - run: npm run build
+
+  ml-service:
+    name: ML Service (pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spectragrid-app/server/ml-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: spectragrid-app/server/ml-service/requirements.txt
+      - run: pip install -r requirements.txt
+      - run: pytest tests/ -v
