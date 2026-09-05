@@ -177,15 +177,16 @@ export const LoginGate: React.FC<LoginGateProps> = ({
                 {isOpen && (
                     <motion.div
                         key="login-backdrop"
-                        initial={{ opacity: 0, backdropFilter: 'blur(0px)', WebkitBackdropFilter: 'blur(0px)' }}
-                        animate={{ opacity: 1, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
-                        exit={{ opacity: 0, backdropFilter: 'blur(0px)', WebkitBackdropFilter: 'blur(0px)' }}
+                        initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+                        animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
+                        exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
                         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                         style={{
                             position: 'fixed',
                             inset: 0,
                             zIndex: 9000,
                             background: 'radial-gradient(circle at 50% -20%, rgba(6, 8, 14, 0.6) 0%, rgba(6, 8, 14, 0.95) 100%)',
+                            WebkitBackdropFilter: 'blur(16px)',
                             display: 'flex',
                             alignItems: 'flex-start',
                             justifyContent: 'center',
