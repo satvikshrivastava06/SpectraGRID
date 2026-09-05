@@ -19,6 +19,7 @@ export default function AIRecommendation({ id, action, financialRecovery, carbon
                 color: '#111',
                 background: 'rgba(255,255,255,0.92)',
                 backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
                 borderRadius: '4px',
                 boxShadow: '0 10px 40px rgba(157, 0, 255, 0.4)'
             }}>
